@@ -1,10 +1,43 @@
 
 class Column
 	constructor: (@x, @y, @w, @h)->
+		@rim_extension = 5
+		@rim_height = 5
 		
 	draw: ->
-		ctx.fillStyle = "gray"
-		ctx.fillRect(@x, @y, @w, @h)
+		if @gradient
+			ctx.save()
+			ctx.translate(@x, @y)
+			
+			ctx.strokeStyle = "black"
+			ctx.lineWidth = 2
+			ctx.fillStyle = @gradient
+			
+			ctx.beginPath()
+			ctx.rect(0, 0, @w, @h)
+			ctx.stroke()
+			ctx.fill()
+			ctx.beginPath()
+			curve_length = 10
+			ctx.moveTo(0, @rim_height + curve_length)
+			ctx.quadraticCurveTo(0, @rim_height, -@rim_extension, @rim_height)
+			ctx.lineTo(-@rim_extension, 0)
+			ctx.lineTo(@w+@rim_extension, 0)
+			ctx.lineTo(@w+@rim_extension, @rim_height)
+			ctx.quadraticCurveTo(@w, @rim_extension, @w, @rim_height + curve_length)
+			ctx.rect(-1, @h-5, @w+2, 5)
+			ctx.stroke()
+			ctx.fill()
+			ctx.beginPath()
+			ctx.fillStyle = @top_gradient
+			ctx.rect(-@rim_extension, 0, @w+@rim_extension*2, 5)
+			ctx.stroke()
+			ctx.fill()
+			
+			ctx.restore()
+		else
+			ctx.fillStyle = "gray"
+			ctx.fillRect(@x, @y, @w, @h)
 
 class PinkColumn extends Column
 	colors = ["rgb(119, 84, 83)", "rgb(139, 81, 85)", "rgb(170, 84, 92)", "rgb(199, 90, 104)", "rgb(211, 97, 124)", "rgb(219, 102, 139)", "rgb(211, 102, 138)", "rgb(217, 127, 164)", "rgb(222, 160, 188)", "rgb(231, 186, 206)", "rgb(229, 177, 202)", "rgb(220, 135, 171)", "rgb(205, 98, 133)", "rgb(189, 87, 114)", "rgb(194, 118, 141)", "rgb(235, 202, 214)", "rgb(247, 238, 241)", "rgb(233, 228, 229)", "rgb(232, 213, 221)", "rgb(234, 188, 207)", "rgb(233, 167, 193)", "rgb(223, 128, 164)", "rgb(207, 107, 136)", "rgb(181, 92, 114)", "rgb(211, 115, 149)", "rgb(218, 116, 153)", "rgb(211, 101, 130)", "rgb(199, 91, 107)", "rgb(178, 83, 92)", "rgb(134, 72, 78)", "rgb(118, 71, 73)", "rgb(157, 80, 90)"]
@@ -24,11 +57,13 @@ class PinkColumn extends Column
 		ctx.translate(@x, @y)
 		
 		ctx.beginPath()
-		ctx.rect(0, 0, @w, 5) # top
-		ctx.rect(0, @h-5, @w, 5) # bottom
+		ctx.rect(-@rim_extension, 0, @w+@rim_extension*2, 5) # top
+		# ctx.rect(0, 0, @w, 5) # top
+		ctx.rect(-@rim_extension, @h-5, @w+@rim_extension*2, 5) # bottom
+		# ctx.rect(0, @h-5, @w, 5) # bottom
 		mini_columns = 3
 		for i in [0...mini_columns]
-			ctx.rect(@w/mini_columns*(i+0.25), 0, @w/mini_columns/2, @h)
+			ctx.rect(@w/(mini_columns-1)*(i-0.25), 0, @w/mini_columns/2+1, @h)
 		
 		ctx.fillStyle = gradient
 		ctx.strokeStyle = "black"
@@ -37,6 +72,9 @@ class PinkColumn extends Column
 		ctx.fill()
 		
 		ctx.restore()
+		
+		# ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
+		# ctx.fillRect(@x, @y, @w, @h)
 
 class YellowColumn extends Column
 	gradient = ctx.createLinearGradient(0.000, 150.000, 20, 150.000)
@@ -58,40 +96,9 @@ class YellowColumn extends Column
 	top_gradient.addColorStop(0.748, 'rgba(255, 229, 0, 1.000)')
 	top_gradient.addColorStop(0.901, 'rgba(255, 109, 0, 1.000)')
 	top_gradient.addColorStop(1.000, 'rgba(127, 0, 0, 1.000)')
-
-	draw: ->
-		ctx.save()
-		ctx.translate(@x, @y)
-		
-		ctx.strokeStyle = "black"
-		ctx.lineWidth = 2
-		ctx.fillStyle = gradient
-		
-		ctx.beginPath()
-		ctx.rect(0, 0, @w, @h)
-		ctx.stroke()
-		ctx.fill()
-		ctx.beginPath()
-		# ctx.moveTo(-4, 4)
-		curve_length = 10
-		rim_extension = 5
-		rim_height = 5
-		ctx.moveTo(0, rim_height + curve_length)
-		ctx.quadraticCurveTo(0, rim_height, -rim_extension, rim_height)
-		ctx.lineTo(-rim_extension, 0)
-		ctx.lineTo(@w+rim_extension, 0)
-		ctx.lineTo(@w+rim_extension, rim_height)
-		ctx.quadraticCurveTo(@w, rim_extension, @w, rim_height + curve_length)
-		ctx.rect(-1, @h-5, @w+2, 5)
-		ctx.stroke()
-		ctx.fill()
-		ctx.beginPath()
-		ctx.fillStyle = top_gradient
-		ctx.rect(-rim_extension, 0, @w+rim_extension*2, 5)
-		ctx.stroke()
-		ctx.fill()
-		
-		ctx.restore()
+	
+	gradient: gradient
+	top_gradient: top_gradient
 
 class CheckpointColumn extends Column
 	
@@ -103,21 +110,7 @@ class CheckpointColumn extends Column
 	gradient.addColorStop(0.851, '#00ffa5')
 	gradient.addColorStop(1.000, 'rgba(0, 63, 127, 1.000)')
 	
-	draw: ->
-		ctx.save()
-		ctx.translate(@x, @y)
-		
-		ctx.strokeStyle = "black"
-		ctx.lineWidth = 2
-		ctx.strokeRect(0, 0, @w, 5)
-		
-		ctx.fillStyle = gradient
-		ctx.fillRect(0, 0, @w, @h)
-		
-		ctx.fillStyle = "#61FF4A"
-		ctx.fillRect(0, 0, @w, 5)
-		
-		ctx.restore()
+	gradient: gradient
 
 class Player
 	keys_previous = {}
@@ -186,7 +179,6 @@ class Player
 		return null
 	
 	draw: ->
-		ctx.fillStyle = "#EFD57C"
 		
 		###
 		# LEGS
@@ -225,6 +217,7 @@ class Player
 		# TORSO
 		###
 		
+		ctx.fillStyle = "#EFD57C"
 		ctx.fillRect @x+@w*0.2, @y, @w*0.6, @h/2
 		
 		###
