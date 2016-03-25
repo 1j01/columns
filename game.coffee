@@ -179,6 +179,8 @@ class Player
 		return null
 	
 	draw: ->
+		# ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
+		# ctx.fillRect(@x, @y, @w, @h)
 		
 		###
 		# LEGS
@@ -264,13 +266,17 @@ class Player
 		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 2
 
 class Gem
-	gradient = ctx.createLinearGradient(-10, -20, 10, 15)
+	gradient = ctx.createLinearGradient(-5, -8, 5, 15)
 
-	gradient.addColorStop(0.00, 'rgba(255, 255, 255, 1.0)')
-	gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')
+	gradient.addColorStop(0.00, 'rgba(255, 255, 255, 0.0)')
+	gradient.addColorStop(0.25, 'rgba(255, 255, 255, 1.0)')
+	gradient.addColorStop(0.40, 'rgba(255, 255, 255, 0.3)')
 	gradient.addColorStop(0.50, 'rgba(255, 255, 255, 0.5)')
+	# gradient.addColorStop(0.55, 'rgba(255, 255, 255, 0.9)')
+	gradient.addColorStop(0.60, 'rgba(255, 255, 255, 0.3)')
+	# gradient.addColorStop(0.65, 'rgba(255, 255, 255, 0.6)')
 	gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.0)')
-	gradient.addColorStop(1.00, 'rgba(255, 255, 255, 0.5)')
+	gradient.addColorStop(1.00, 'rgba(255, 255, 255, 0.3)')
 	
 	constructor: (@x, @y)->
 		@color = "hsl(#{random()*360}, 100%, 50%)"
@@ -350,8 +356,15 @@ class Gem
 		ctx.fill()
 		ctx.fillStyle = gradient
 		ctx.fill()
-		ctx.rotate(@rotation)
-		ctx.fill()
+		# ctx.rotate(@rotation)
+		# ctx.rotate(2 / @sides * TAU)
+		# ctx.globalCompositeOperation = "soft-light"
+		# ctx.fill()
+		# ctx.globalCompositeOperation = "exclusion"
+		# ctx.globalAlpha = 1 / @sides
+		# for i in [0..@sides]
+		# 	ctx.rotate(1 / @sides * TAU)
+		# 	ctx.fill()
 		ctx.restore()
 
 level_bottom = 500
