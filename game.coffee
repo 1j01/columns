@@ -209,7 +209,53 @@ class Player
 		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 8
 		ctx.fillStyle = "#3D3127"
 		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 2
-		
+
+class Gem
+	gradient = ctx.createLinearGradient(-10, -20, 10, 15)
+
+	gradient.addColorStop(0.00, 'rgba(255, 255, 255, 1.0)')
+	gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')
+	gradient.addColorStop(0.50, 'rgba(255, 255, 255, 0.5)')
+	gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.0)')
+	gradient.addColorStop(1.00, 'rgba(255, 255, 255, 0.5)')
+	
+	constructor: (@x, @y)->
+		@color = "hsl(#{random()*360}, 100%, 50%)"
+		@sides = ~~(random() * 5 + 3)
+		@radius = 3 + @sides / 2
+		@rotation = random() * TAU
+	
+	step: ->
+		dx = player.x + player.w/2 - @x
+		dy = player.y + player.h/2 - @y
+		dist = sqrt(dx*dx + dy*dy)
+		if dist < 50
+			console.log dist
+			@x += dx / dist / 2
+			@y += dy / dist / 2
+	
+	draw: ->
+		# ctx.fillStyle = @color
+		# ctx.fillRect(@x, @y, 5, 5)
+		ctx.save()
+		ctx.translate(@x, @y)
+		# ctx.rotate(@rotation)
+		ctx.beginPath()
+		for i in [0..@sides]
+			ctx.lineTo(
+				# @radius * sin(i / @sides * TAU)
+				# @radius * cos(i / @sides * TAU)
+				@radius * sin(i / @sides * TAU + @rotation)
+				@radius * cos(i / @sides * TAU + @rotation)
+			)
+		ctx.fillStyle = @color
+		ctx.stroke()
+		ctx.fill()
+		ctx.fillStyle = gradient
+		ctx.fill()
+		ctx.rotate(@rotation)
+		ctx.fill()
+		ctx.restore()
 
 level_bottom = 500
 columns = []
@@ -217,6 +263,11 @@ for x in [0..1500] by 50
 	SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
 	height = random() * level_bottom/2
 	columns.push new SomeColumn(x, level_bottom-height, 20, height)
+
+gems = []
+for x in [0..1500] by 50
+	for [0..2]
+		gems.push new Gem(x + random() * 50, random() * level_bottom)
 
 player = new Player(152, 15)
 
@@ -233,8 +284,9 @@ animate ->
 	ctx.fillStyle = "#fff"
 	ctx.fillRect 0, 0, w, h
 	
-	for column in columns
-		column.draw()
+	gem.step() for gem in gems
+	gem.draw() for gem in gems
+	column.draw() for column in columns
 	
 	player.step()
 	player.draw()
