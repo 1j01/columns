@@ -297,6 +297,9 @@ for x in [0..1500] by 50
 
 player = new Player(152, 15)
 
+view = {cx: player.x, cy: player.y}
+view_to = {cx: player.x, cy: player.y}
+
 keys = {}
 addEventListener "keydown", (e)->
 	keys[e.keyCode] = on
@@ -310,6 +313,13 @@ animate ->
 	ctx.fillStyle = "#fff"
 	ctx.fillRect 0, 0, w, h
 	
+	ctx.save()
+	view_to = {cx: player.x, cy: player.y}
+	view.cx += (view_to.cx - view.cx) / 5
+	view.cy += (view_to.cy - view.cy) / 5
+	view.cy = Math.min(view.cy, level_bottom-canvas.height/2)
+	ctx.translate(canvas.width/2-view.cx, canvas.height/2-view.cy)
+	
 	gem.step() for gem in gems
 	gem.draw() for gem in gems
 	column.draw() for column in columns
@@ -320,4 +330,5 @@ animate ->
 	if player.y + player.h > level_bottom
 		player = new Player(152, 15)
 		gem.collected = no for gem in gems
-
+	
+	ctx.restore()
