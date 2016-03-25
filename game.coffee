@@ -55,20 +55,25 @@ class YellowColumn extends Column
 		
 		ctx.strokeStyle = "black"
 		ctx.lineWidth = 2
-		ctx.strokeRect(0, 0, @w, 5)
-		
-		ctx.strokeStyle = "black"
-		ctx.lineWidth = 2
-		ctx.strokeRect(0, @h, @w, 5)
-		
 		ctx.fillStyle = gradient
-		ctx.fillRect(0, 0, @w, @h)
 		
-		ctx.fillStyle = "yellow"
-		ctx.fillRect(0, 0, @w, 5)
+		ctx.beginPath()
+		ctx.rect(0, 0, @w, @h)
+		ctx.stroke()
+		ctx.fill()
+		ctx.beginPath()
+		ctx.rect(-1, 0, @w+2, 5)
+		ctx.rect(-1, @h-5, @w+2, 5)
+		ctx.stroke()
+		ctx.fill()
 		
-		ctx.fillStyle = "yellow"
-		ctx.fillRect(0, @h, @w, 5)
+		
+		# ctx.fillStyle = "yellow"
+		# ctx.fillRect(0, 0, @w, 5)
+		
+		# ctx.fillStyle = "yellow"
+		# ctx.fillRect(0, @h, @w, 5)
+		
 		
 		ctx.restore()
 
