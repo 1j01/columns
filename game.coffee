@@ -291,6 +291,8 @@ class Gem
 		@deposited = no
 		@deposited_to = null
 		@deposited_fully = no # for animation
+		# @value = @sides * 100
+		@value = 100
 	
 	step: ->
 		dx = player.x + player.w/2 - @x
@@ -446,3 +448,23 @@ animate ->
 		spawn_player()
 	
 	ctx.restore()
+	
+	holding_score = 0
+	deposited_score = 0
+	for gem in gems
+		if gem.deposited
+			deposited_score += gem.value
+		else if gem.collected
+			holding_score += gem.value 
+	
+	# font_size = max(20, min(canvas.width, canvas.height) / 30)
+	# font_size = max(20, canvas.width / 30)
+	font_size = max(20, (canvas.width + canvas.height) / 60)
+	ctx.font = "#{font_size}px sans-serif"
+	ctx.textAlign = "right"
+	ctx.textBaseline = "top"
+	ctx.fillStyle = "black"
+	ctx.fillText(deposited_score, canvas.width-15, 15)
+	if holding_score > 0
+		ctx.fillStyle = "rgb(0, 150, 0)"
+		ctx.fillText("+#{holding_score}", canvas.width-15, 20 + font_size)
