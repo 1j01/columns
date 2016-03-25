@@ -134,7 +134,13 @@ class Player
 		ctx.translate(@x + @w/2, @y + @h/2 - 4)
 		ctx.fillStyle = "#B0BCC5"
 		
-		leg_angle = Math.sin(Date.now() / 100)
+		# leg_angle = Math.sin(Date.now() / 100)
+		leg_angle = if @collision(@x, @y + 1) then 0.2 else 0.8
+		leg_angle =
+			if @collision(@x, @y + 1)
+				0.2 + Math.sin(Date.now() / 800) / 30
+			else
+				0.8 + Math.sin(Date.now() / 100) / 10
 		
 		ctx.save()
 		ctx.rotate(leg_angle)
@@ -164,6 +170,7 @@ class Player
 		
 		derp_angle = 0.8
 		derp_angle_2 = 1.6
+		derp_angle_2 += Math.sin(Date.now() / 100) / 20
 		
 		ctx.save()
 		ctx.translate(@x + @w/2, @y + @h/20 - 4)
