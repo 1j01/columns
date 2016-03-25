@@ -65,11 +65,89 @@ class YellowColumn extends Column
 		
 		ctx.restore()
 
+class Player
+	constructor: (@x, @y)->
+		@w = 16
+		@h = 32
+	
+	draw: ->
+		ctx.fillStyle = "#EFD57C"
+		
+		###
+		# LEGS
+		###
+		
+		ctx.save()
+		ctx.translate(@x + @w/2, @y + @h/2 - 4)
+		ctx.fillStyle = "#B0BCC5"
+		
+		leg_angle = Math.sin(Date.now() / 100)
+		
+		ctx.save()
+		ctx.rotate(leg_angle)
+		ctx.fillRect(-2, 0, 4, @h/2+4)
+		ctx.restore()
+		
+		ctx.save()
+		ctx.rotate(-leg_angle)
+		ctx.fillRect(-2, 0, 4, @h/2+4)
+		ctx.restore()
+		
+		ctx.restore()
+		
+		###
+		# TORSO
+		###
+		
+		# ctx.fillRect @x, @y, @w, @h
+		# ctx.fillRect @x, @y, @w, @h/2
+		ctx.fillRect @x+@w*0.2, @y, @w*0.6, @h/2
+		
+		###
+		# ARMS
+		###
+		
+		derp_angle = 0.8
+		derp_angle_2 = 1.6
+		
+		ctx.save()
+		ctx.translate(@x + @w/2, @y + @h/20 - 4)
+		
+		ctx.save()
+		ctx.rotate(derp_angle)
+		ctx.fillRect(-2, 0, 4, @h/3)
+		ctx.translate(0, @h/3)
+		ctx.rotate(derp_angle_2)
+		ctx.fillStyle = "#DFAF78"
+		ctx.fillRect(-2, 0, 3, @h/3)
+		ctx.restore()
+		
+		ctx.save()
+		ctx.rotate(-derp_angle)
+		ctx.fillRect(-2, 0, 4, @h/3)
+		ctx.translate(0, @h/3)
+		ctx.rotate(-derp_angle_2)
+		ctx.fillStyle = "#DFAF78"
+		ctx.fillRect(-2, 0, 3, @h/3)
+		ctx.restore()
+		
+		ctx.restore()
+		
+		###
+		# HEAD
+		###
+		
+		ctx.fillStyle = "#DFAF78"
+		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 8
+		ctx.fillStyle = "#3D3127"
+		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 2
+		
 
 columns = [
-	new PinkColumn(150, 50, 20, 150)
-	new YellowColumn(50, 50, 20, 150)
+	new PinkColumn(150, 150, 20, 150)
+	new YellowColumn(50, 150, 20, 150)
 ]
+player = new Player(152, 115)
 
 animate ->
 	{width: w, height: h} = canvas
@@ -79,3 +157,5 @@ animate ->
 	
 	for column in columns
 		column.draw()
+	
+	player.draw()
