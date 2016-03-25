@@ -77,9 +77,10 @@ class Player
 		@jumps = 0
 	
 	step: ->
-		move = keys[39]? - keys[37]?
+		move = (keys[39]? or keys[68]?) - (keys[37]? or keys[65]?)
 		jump =
 			(keys[38]? and not keys_previous[38]?) or
+			(keys[87]? and not keys_previous[87]?) or
 			(keys[32]? and not keys_previous[32]?)
 		
 		keys_previous = {}
@@ -226,17 +227,24 @@ class Gem
 		@start_y = @y
 		@vx = 0
 		@vy = 0
+		@collected = no
 	
 	step: ->
 		dx = player.x + player.w/2 - @x
 		dy = player.y + player.h/2 - @y
 		dist = sqrt(dx*dx + dy*dy)
-		if 50 > dist > 1
-			force = 3
-			if dist < 20
-				force = 2
-			if dist < 10
-				force = 1
+		force = 0
+		if dist > 1
+			if dist < 50
+				force = 3
+				if dist < 20
+					force = 2
+				if dist < 10
+					force = 1
+					@collected = yes
+			if @collected
+				force = 1.1
+		if force > 0
 			@vx += dx / dist * force
 			@vy += dy / dist * force
 		
@@ -245,6 +253,10 @@ class Gem
 		dist = sqrt(dx*dx + dy*dy)
 		if dist > 1
 			force = 1
+			if dist < 5
+				force = 0.5
+			if dist < 2
+				force = 0.1
 			@vx += dx / dist * force
 			@vy += dy / dist * force
 		
@@ -253,6 +265,8 @@ class Gem
 	
 	draw: ->
 		ctx.save()
+		if @collected
+			ctx.globalAlpha = 0.1
 		ctx.translate(@x, @y)
 		ctx.beginPath()
 		for i in [0..@sides]
@@ -305,4 +319,5 @@ animate ->
 	
 	if player.y + player.h > level_bottom
 		player = new Player(152, 15)
+		gem.collected = no for gem in gems
 
