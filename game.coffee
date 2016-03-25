@@ -69,6 +69,42 @@ class Player
 	constructor: (@x, @y)->
 		@w = 16
 		@h = 32
+		@vx = 0
+		@vy = 0
+		@gravity = 0.5
+	
+	step: ->
+		jump = keys[38]?
+		move = keys[39]? - keys[37]?
+		@vx += move
+		@vy = -5 if jump
+		# @x += @vx *= 0.9
+		# @y += @vy += @gravity
+		@vx *= 0.9
+		@vy += @gravity
+		mx = @vx
+		my = @vy
+		resolution = 0.1
+		x_step = resolution * sign(mx)
+		y_step = resolution * sign(my)
+		while abs(mx) > resolution
+			if @collision(@x + x_step, @y)
+				@vx = 0
+				break
+			mx -= x_step
+			@x += x_step
+		while abs(my) > resolution
+			if @collision(@x, @y + y_step)
+				@vy = 0
+				break
+			my -= y_step
+			@y += y_step
+	
+	collision: (x, y)->
+		for column in columns
+			unless x + @w < column.x or column.x + column.w < x or y + @h < column.y or column.y + column.h < y
+				return column
+		return null
 	
 	draw: ->
 		ctx.fillStyle = "#EFD57C"
@@ -91,6 +127,8 @@ class Player
 		ctx.save()
 		ctx.rotate(-leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
+		# ctx.fillStyle = "#51576C"
+		# ctx.fillRect(-2, @h/2+4, 5, 3)
 		ctx.restore()
 		
 		ctx.restore()
@@ -147,7 +185,14 @@ columns = [
 	new PinkColumn(150, 150, 20, 150)
 	new YellowColumn(50, 150, 20, 150)
 ]
-player = new Player(152, 115)
+player = new Player(152, 15)
+
+keys = {}
+addEventListener "keydown", (e)->
+	keys[e.keyCode] = on
+	console.log e.keyCode
+addEventListener "keyup", (e)->
+	delete keys[e.keyCode]
 
 animate ->
 	{width: w, height: h} = canvas
@@ -158,4 +203,6 @@ animate ->
 	for column in columns
 		column.draw()
 	
+	player.step()
 	player.draw()
+
