@@ -179,10 +179,13 @@ class Player
 		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 2
 		
 
-columns = [
-	new PinkColumn(150, 150, 20, 150)
-	new YellowColumn(50, 150, 20, 150)
-]
+level_bottom = 500
+columns = []
+for x in [0..1500] by 50
+	SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+	height = random() * level_bottom/2
+	columns.push new SomeColumn(x, level_bottom-height, 20, height)
+
 player = new Player(152, 15)
 
 keys = {}
@@ -203,4 +206,7 @@ animate ->
 	
 	player.step()
 	player.draw()
+	
+	if player.y + player.h > level_bottom
+		player = new Player(152, 15)
 
