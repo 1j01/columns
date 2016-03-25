@@ -30,7 +30,7 @@ class PinkColumn extends Column
 		for i in [0...mini_columns]
 			ctx.rect(@w/mini_columns*(i+0.25), 0, @w/mini_columns/2, @h)
 		
-		ctx.fillStyle = gradient # "pink"
+		ctx.fillStyle = gradient
 		ctx.strokeStyle = "black"
 		ctx.lineWidth = 2
 		ctx.stroke()
@@ -57,7 +57,7 @@ class YellowColumn extends Column
 		ctx.lineWidth = 2
 		ctx.strokeRect(0, 0, @w, 5)
 		
-		ctx.fillStyle = gradient # "yellow"
+		ctx.fillStyle = gradient
 		ctx.fillRect(0, 0, @w, @h)
 		
 		ctx.fillStyle = "yellow"
@@ -134,7 +134,6 @@ class Player
 		ctx.translate(@x + @w/2, @y + @h/2 - 4)
 		ctx.fillStyle = "#B0BCC5"
 		
-		# leg_angle = Math.sin(Date.now() / 100)
 		leg_angle = if @collision(@x, @y + 1) then 0.2 else 0.8
 		leg_angle =
 			if @collision(@x, @y + 1)
@@ -153,6 +152,7 @@ class Player
 		ctx.save()
 		ctx.rotate(-leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
+		# todo: shoes?
 		# ctx.fillStyle = "#51576C"
 		# ctx.fillRect(-2, @h/2+4, 5, 3)
 		ctx.restore()
@@ -163,8 +163,6 @@ class Player
 		# TORSO
 		###
 		
-		# ctx.fillRect @x, @y, @w, @h
-		# ctx.fillRect @x, @y, @w, @h/2
 		ctx.fillRect @x+@w*0.2, @y, @w*0.6, @h/2
 		
 		###
@@ -230,21 +228,15 @@ class Gem
 		dy = player.y + player.h/2 - @y
 		dist = sqrt(dx*dx + dy*dy)
 		if dist < 50
-			console.log dist
 			@x += dx / dist / 2
 			@y += dy / dist / 2
 	
 	draw: ->
-		# ctx.fillStyle = @color
-		# ctx.fillRect(@x, @y, 5, 5)
 		ctx.save()
 		ctx.translate(@x, @y)
-		# ctx.rotate(@rotation)
 		ctx.beginPath()
 		for i in [0..@sides]
 			ctx.lineTo(
-				# @radius * sin(i / @sides * TAU)
-				# @radius * cos(i / @sides * TAU)
 				@radius * sin(i / @sides * TAU + @rotation)
 				@radius * cos(i / @sides * TAU + @rotation)
 			)
@@ -274,7 +266,7 @@ player = new Player(152, 15)
 keys = {}
 addEventListener "keydown", (e)->
 	keys[e.keyCode] = on
-	console.log e.keyCode
+	console.log e.keyCode if e.altKey
 addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
 
