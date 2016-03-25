@@ -408,8 +408,8 @@ do spawn_player = ->
 	player.y -= player.h * 5
 	player.y -= 1 while player.collision(player.x, player.y)
 
-view = {cx: player.x, cy: player.y}
-view_to = {cx: player.x, cy: player.y}
+view = {cx: player.x, cy: player.y, scale: 1}
+view_to = {cx: player.x, cy: player.y, scale: 1}
 
 keys = {}
 addEventListener "keydown", (e)->
@@ -419,17 +419,21 @@ addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
 
 animate ->
-	{width: w, height: h} = canvas
-	
 	ctx.fillStyle = "#fff"
-	ctx.fillRect 0, 0, w, h
+	ctx.fillRect 0, 0, canvas.width, canvas.height
 	
 	ctx.save()
-	view_to = {cx: player.x, cy: player.y}
-	view.cx += (view_to.cx - view.cx) / 5
-	view.cy += (view_to.cy - view.cy) / 5
-	view.cy = Math.min(view.cy, level_bottom-canvas.height/2)
-	ctx.translate(canvas.width/2-view.cx, canvas.height/2-view.cy)
+	view_to.cx = player.x
+	view_to.cy = player.y
+	view_to.scale =
+		if canvas.width > 1500 then 2
+		else if canvas.width > 1000 then 1.5 else 1
+	view.cx += (view_to.cx - view.cx) / 10
+	view.cy += (view_to.cy - view.cy) / 10
+	view.scale += (view_to.scale - view.scale) / 20
+	view.cy = Math.min(view.cy, level_bottom-canvas.height/2/view.scale)
+	ctx.scale(view.scale, view.scale)
+	ctx.translate(canvas.width/2/view.scale-view.cx, canvas.height/2/view.scale-view.cy)
 	
 	gem.step() for gem in gems
 	gem.draw() for gem in gems
