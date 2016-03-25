@@ -49,6 +49,16 @@ class YellowColumn extends Column
 	gradient.addColorStop(0.901, 'rgba(255, 109, 0, 1.000)')
 	gradient.addColorStop(1.000, 'rgba(127, 0, 0, 1.000)')
 
+	top_gradient = ctx.createLinearGradient(-5, 150.000, 30, 150.000)
+
+	top_gradient.addColorStop(0.000, 'rgba(255, 110, 2, 1.000)')
+	top_gradient.addColorStop(0.083, 'rgba(255, 187, 0, 1.000)')
+	top_gradient.addColorStop(0.223, 'rgba(255, 233, 0, 1.000)')
+	top_gradient.addColorStop(0.495, 'rgba(255, 255, 0, 1.000)')
+	top_gradient.addColorStop(0.748, 'rgba(255, 229, 0, 1.000)')
+	top_gradient.addColorStop(0.901, 'rgba(255, 109, 0, 1.000)')
+	top_gradient.addColorStop(1.000, 'rgba(127, 0, 0, 1.000)')
+
 	draw: ->
 		ctx.save()
 		ctx.translate(@x, @y)
@@ -62,24 +72,28 @@ class YellowColumn extends Column
 		ctx.stroke()
 		ctx.fill()
 		ctx.beginPath()
-		ctx.rect(-1, 0, @w+2, 5)
+		# ctx.moveTo(-4, 4)
+		curve_length = 10
+		rim_extension = 5
+		rim_height = 5
+		ctx.moveTo(0, rim_height + curve_length)
+		ctx.quadraticCurveTo(0, rim_height, -rim_extension, rim_height)
+		ctx.lineTo(-rim_extension, 0)
+		ctx.lineTo(@w+rim_extension, 0)
+		ctx.lineTo(@w+rim_extension, rim_height)
+		ctx.quadraticCurveTo(@w, rim_extension, @w, rim_height + curve_length)
 		ctx.rect(-1, @h-5, @w+2, 5)
 		ctx.stroke()
 		ctx.fill()
-		
-		
-		# ctx.fillStyle = "yellow"
-		# ctx.fillRect(0, 0, @w, 5)
-		
-		# ctx.fillStyle = "yellow"
-		# ctx.fillRect(0, @h, @w, 5)
-		
+		ctx.beginPath()
+		ctx.fillStyle = top_gradient
+		ctx.rect(-rim_extension, 0, @w+rim_extension*2, 5)
+		ctx.stroke()
+		ctx.fill()
 		
 		ctx.restore()
 
 class CheckpointColumn extends Column
-	# constructor: (x, y, w, h)->
-	# 	super
 	
 	gradient = ctx.createLinearGradient(0.000, 150.000, 40, 150.000)
 	
