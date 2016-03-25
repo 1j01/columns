@@ -145,11 +145,11 @@ class Player
 				@vy = -9
 		
 		if grounded instanceof CheckpointColumn
-			checkpoint = grounded
+			@checkpoint = grounded
 			for gem in gems when gem.collected and not gem.deposited
 				gem.vy -= 20
 				gem.deposited = yes
-				gem.deposited_to = checkpoint
+				gem.deposited_to = @checkpoint
 		
 		@vx *= 0.8
 		@vy += @gravity
@@ -406,7 +406,8 @@ for x in [0..1500] by 50
 player = null
 do spawn_player = ->
 	gem.collected = no for gem in gems
-	player = new Player(columns[3].x + 2, columns[3].y)
+	column = player?.checkpoint ? columns[3]
+	player = new Player(column.x + 2, column.y)
 	player.y -= player.h * 5
 	player.y -= 1 while player.collision(player.x, player.y)
 
