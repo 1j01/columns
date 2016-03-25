@@ -74,13 +74,11 @@ class Player
 		@gravity = 0.5
 	
 	step: ->
-		jump = keys[38]?
+		jump = keys[38]? or keys[32]?
 		move = keys[39]? - keys[37]?
 		@vx += move
-		@vy = -5 if jump
-		# @x += @vx *= 0.9
-		# @y += @vy += @gravity
-		@vx *= 0.9
+		@vy = -9 if jump and @collision(@x, @y + 1)
+		@vx *= 0.8
 		@vy += @gravity
 		mx = @vx
 		my = @vy
