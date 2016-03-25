@@ -66,20 +66,39 @@ class YellowColumn extends Column
 		ctx.restore()
 
 class Player
+	keys_previous = {}
+	
 	constructor: (@x, @y)->
 		@w = 16
 		@h = 32
 		@vx = 0
 		@vy = 0
 		@gravity = 0.5
+		@jumps = 0
 	
 	step: ->
-		jump = keys[38]? or keys[32]?
 		move = keys[39]? - keys[37]?
+		jump =
+			(keys[38]? and not keys_previous[38]?) or
+			(keys[32]? and not keys_previous[32]?)
+		
+		keys_previous = {}
+		keys_previous[k] = v for k, v of keys
+		
+		grounded = @collision(@x, @y + 1)
+		
 		@vx += move
-		@vy = -9 if jump and @collision(@x, @y + 1)
+		
+		if grounded
+			@jumps = 2
+		if jump
+			if @jumps
+				@jumps -= 1
+				@vy = -9
+		
 		@vx *= 0.8
 		@vy += @gravity
+		
 		mx = @vx
 		my = @vy
 		resolution = 0.1
