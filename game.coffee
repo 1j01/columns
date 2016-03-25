@@ -222,14 +222,34 @@ class Gem
 		@sides = ~~(random() * 5 + 3)
 		@radius = 3 + @sides / 2
 		@rotation = random() * TAU
+		@start_x = @x
+		@start_y = @y
+		@vx = 0
+		@vy = 0
 	
 	step: ->
 		dx = player.x + player.w/2 - @x
 		dy = player.y + player.h/2 - @y
 		dist = sqrt(dx*dx + dy*dy)
-		if dist < 50
-			@x += dx / dist / 2
-			@y += dy / dist / 2
+		if 50 > dist > 1
+			force = 3
+			if dist < 20
+				force = 2
+			if dist < 10
+				force = 1
+			@vx += dx / dist * force
+			@vy += dy / dist * force
+		
+		dx = @start_x - @x
+		dy = @start_y - @y
+		dist = sqrt(dx*dx + dy*dy)
+		if dist > 1
+			force = 1
+			@vx += dx / dist * force
+			@vy += dy / dist * force
+		
+		@x += @vx *= 0.9
+		@y += @vy *= 0.9
 	
 	draw: ->
 		ctx.save()
