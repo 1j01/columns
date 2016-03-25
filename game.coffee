@@ -57,11 +57,18 @@ class YellowColumn extends Column
 		ctx.lineWidth = 2
 		ctx.strokeRect(0, 0, @w, 5)
 		
+		ctx.strokeStyle = "black"
+		ctx.lineWidth = 2
+		ctx.strokeRect(0, @h, @w, 5)
+		
 		ctx.fillStyle = gradient
 		ctx.fillRect(0, 0, @w, @h)
 		
 		ctx.fillStyle = "yellow"
 		ctx.fillRect(0, 0, @w, 5)
+		
+		ctx.fillStyle = "yellow"
+		ctx.fillRect(0, @h, @w, 5)
 		
 		ctx.restore()
 
@@ -340,22 +347,41 @@ columns = []
 last_checkpoint = 0
 x = 0
 while x < 1500
-	w = 20
 	SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+	width = 20
 	if random() < 0.4 and x > last_checkpoint + 400
 		SomeColumn = CheckpointColumn
 		last_checkpoint = x
-		w = 40
+		width = 40
 	height = random() * level_bottom/2
-	columns.push new SomeColumn(x, level_bottom-height, w, height)
-	x += 30 + w + if random() < 0.5 then 10 else 0
+	column = new SomeColumn(x, level_bottom-height, width, height)
+	columns.push column
+	
+	x += width/4 if width > 20
+	
+	if random() < 0.3
+		SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+		floater_width = 20
+		floater_height = random() * 20 + 20
+		floater_y = column.y - floater_height - random() * 250 - if column instanceof CheckpointColumn then 60 else 20
+		floating_column = new SomeColumn(x, floater_y, floater_width, floater_height)
+		columns.push floating_column
+	
+	x -= width/4 if width > 20
+	
+	x += 30 + width + if random() < 0.5 then 10 else 0
 
 gems = []
 for x in [0..1500] by 50
 	for [0..2]
 		gems.push new Gem(x + random() * 50, random() * level_bottom)
 
-player = new Player(columns[3].x + 2, 15)
+player = null
+do spawn_player = ->
+	gem.collected = no for gem in gems
+	player = new Player(columns[3].x + 2, columns[3].y)
+	player.y -= player.h * 5
+	player.y -= 1 while player.collision(player.x, player.y)
 
 view = {cx: player.x, cy: player.y}
 view_to = {cx: player.x, cy: player.y}
@@ -388,8 +414,6 @@ animate ->
 	player.draw()
 	
 	if player.y + player.h > level_bottom
-		player = new Player(columns[3].x + 2, columns[3].y)
-		player.y -= player.h * 5
-		gem.collected = no for gem in gems
+		spawn_player()
 	
 	ctx.restore()
