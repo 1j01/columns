@@ -65,6 +65,34 @@ class YellowColumn extends Column
 		
 		ctx.restore()
 
+class CheckpointColumn extends Column
+	# constructor: (x, y, w, h)->
+	# 	super
+	
+	gradient = ctx.createLinearGradient(0.000, 150.000, 40, 150.000)
+	
+	gradient.addColorStop(0.000, 'rgba(0, 167, 175, 1.000)')
+	gradient.addColorStop(0.271, 'rgba(0, 255, 33, 1.000)')
+	gradient.addColorStop(0.477, 'rgba(167, 255, 104, 1.000)')
+	gradient.addColorStop(0.851, '#00ffa5')
+	gradient.addColorStop(1.000, 'rgba(0, 63, 127, 1.000)')
+	
+	draw: ->
+		ctx.save()
+		ctx.translate(@x, @y)
+		
+		ctx.strokeStyle = "black"
+		ctx.lineWidth = 2
+		ctx.strokeRect(0, 0, @w, 5)
+		
+		ctx.fillStyle = gradient
+		ctx.fillRect(0, 0, @w, @h)
+		
+		ctx.fillStyle = "#61FF4A"
+		ctx.fillRect(0, 0, @w, 5)
+		
+		ctx.restore()
+
 class Player
 	keys_previous = {}
 	
@@ -96,6 +124,13 @@ class Player
 			if @jumps
 				@jumps -= 1
 				@vy = -9
+		
+		if grounded instanceof CheckpointColumn
+			checkpoint = grounded
+			for gem in gems when gem.collected and not gem.deposited
+				gem.vy -= 20
+				gem.deposited = yes
+				gem.deposited_to = checkpoint
 		
 		@vx *= 0.8
 		@vy += @gravity
@@ -228,6 +263,9 @@ class Gem
 		@vx = 0
 		@vy = 0
 		@collected = no
+		@deposited = no
+		@deposited_to = null
+		@deposited_fully = no # for animation
 	
 	step: ->
 		dx = player.x + player.w/2 - @x
@@ -248,6 +286,18 @@ class Gem
 			@vx += dx / dist * force
 			@vy += dy / dist * force
 		
+		if @deposited
+			dx = @deposited_to.x + @deposited_to.w/2 - @x
+			dy = @deposited_to.y - @y
+			dist = sqrt(dx*dx + dy*dy)
+			if abs(dx > 100)
+				@vy -= 1
+			if dist > 1
+				force = 3
+				@vx += dx / dist * force
+				@vy += dy / dist * force
+				@deposited_fully = yes if dist < 10
+		
 		dx = @start_x - @x
 		dy = @start_y - @y
 		dist = sqrt(dx*dx + dy*dy)
@@ -264,6 +314,8 @@ class Gem
 		@y += @vy *= 0.9
 	
 	draw: ->
+		if @deposited_fully
+			return
 		ctx.save()
 		if @collected
 			ctx.globalAlpha = 0.1
@@ -285,17 +337,25 @@ class Gem
 
 level_bottom = 500
 columns = []
-for x in [0..1500] by 50
+last_checkpoint = 0
+x = 0
+while x < 1500
+	w = 20
 	SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+	if random() < 0.4 and x > last_checkpoint + 400
+		SomeColumn = CheckpointColumn
+		last_checkpoint = x
+		w = 40
 	height = random() * level_bottom/2
-	columns.push new SomeColumn(x, level_bottom-height, 20, height)
+	columns.push new SomeColumn(x, level_bottom-height, w, height)
+	x += 30 + w + if random() < 0.5 then 10 else 0
 
 gems = []
 for x in [0..1500] by 50
 	for [0..2]
 		gems.push new Gem(x + random() * 50, random() * level_bottom)
 
-player = new Player(152, 15)
+player = new Player(columns[3].x + 2, 15)
 
 view = {cx: player.x, cy: player.y}
 view_to = {cx: player.x, cy: player.y}
@@ -328,7 +388,8 @@ animate ->
 	player.draw()
 	
 	if player.y + player.h > level_bottom
-		player = new Player(152, 15)
+		player = new Player(columns[3].x + 2, columns[3].y)
+		player.y -= player.h * 5
 		gem.collected = no for gem in gems
 	
 	ctx.restore()
