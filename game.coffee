@@ -142,6 +142,9 @@ class Player
 			else
 				0.8 + Math.sin(Date.now() / 100) / 10
 		
+		if @vy > 2
+			leg_angle /= @vy / 2
+		
 		ctx.save()
 		ctx.rotate(leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
@@ -171,6 +174,9 @@ class Player
 		derp_angle = 0.8
 		derp_angle_2 = 1.6
 		derp_angle_2 += Math.sin(Date.now() / 100) / 20
+		if @vy > 2
+			derp_angle += Math.sin(Date.now() / 155)
+			derp_angle_2 += Math.sin(Date.now() / 94)
 		
 		ctx.save()
 		ctx.translate(@x + @w/2, @y + @h/20 - 4)
