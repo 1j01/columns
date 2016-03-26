@@ -2,6 +2,8 @@
 jump_sound = new Howl urls: ["sound/jump.wav"], volume: 0.1
 pickup_sound = new Howl urls: ["sound/pickup.wav"], volume: 0.1
 deposit_sound = new Howl urls: ["sound/deposit.wav"], volume: 0.01
+# powerup_sound = new Howl urls: ["sound/powerup.wav"], volume: 0.1
+triple_jump_unlocked_sound = new Howl urls: ["sound/triple-jump-unlocked.wav"], volume: 0.1
 respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
 drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
 crumble_sound = new Howl urls: ["sound/crumble.wav"], volume: 0.5
@@ -14,7 +16,7 @@ addEventListener "keydown", (e)->
 	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
 	if e.keyCode is 82
 		game.restart()
-	
+
 addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
 
@@ -532,9 +534,13 @@ class Level
 		for gem in @gems when gem.collected
 			gem.collected = no
 			gem.dropped = yes
-		column = @player?.checkpoint ? @columns[3]
-		@player = new Player(column.x + 2, column.y)
-		@player.checkpoint = column
+		if @player?
+			@player.x = @player.checkpoint.x
+			@player.y = @player.checkpoint.y
+		else
+			column = @columns[3]
+			@player = new Player(column.x + 2, column.y)
+			@player.checkpoint = column
 		@player.y -= @player.h * 5
 		@player.y -= 1 while @player.collision(@player.x, @player.y)
 	
@@ -556,6 +562,11 @@ class Level
 		@player.draw()
 
 class Game
+	constructor: ->
+		@holding_score = 0
+		@deposited_score = 0
+		@dropping_score = 0
+	
 	restart: ->
 		@start()
 	
@@ -567,8 +578,11 @@ class Game
 		@view = {cx: player.x, cy: player.y, scale: 1}
 		@view_to = {cx: player.x, cy: player.y, scale: 1}
 		
-		# @triple_jump_unlocked = 0
-		# @triple_jump_unlocked_animation = 0
+		@triple_jump_unlock_score = 7000
+		@triple_jump_unlocked = 0
+		@triple_jump_unlocked_animation = 0
+		@triple_jump_unlocked_animation_velocity = 0
+		@triple_jump_unlocked_animation_time = 0
 	
 	animate: ->
 		animate =>
@@ -598,21 +612,23 @@ class Game
 			
 			ctx.restore()
 			
-			prev_deposited_score = deposited_score
+			prev_deposited_score = @deposited_score
 			
-			holding_score = 0
-			deposited_score = 0
-			dropping_score = 0
+			@holding_score = 0
+			@deposited_score = 0
+			@dropping_score = 0
 			for gem in @level.gems
 				if gem.deposited
-					deposited_score += gem.value
+					@deposited_score += gem.value
 				else if gem.dropped
-					dropping_score += gem.value 
+					@dropping_score += gem.value 
 				else if gem.collected
-					holding_score += gem.value 
+					@holding_score += gem.value 
 			
-			# if deposited_score > 7000 and prev_deposited_score <= 7000
-			# 	player.max_jumps = 3
+			if @deposited_score >= @triple_jump_unlock_score and prev_deposited_score < @triple_jump_unlock_score
+				@level.player.max_jumps = 3
+				@triple_jump_unlocked = yes
+				triple_jump_unlocked_sound.play()
 			
 			font_size = max(20, (canvas.width + canvas.height) / 60)
 			ctx.font = "#{font_size}px sans-serif"
@@ -620,16 +636,69 @@ class Game
 			ctx.textBaseline = "top"
 			ctx.fillStyle = "black"
 			y = 15
-			ctx.fillText(deposited_score, canvas.width-15, y)
-			if dropping_score > 0
+			ctx.fillText(@deposited_score, canvas.width-15, y)
+			if @dropping_score > 0
 				y += 20 + font_size
 				ctx.fillStyle = "rgb(150, 0, 0)"
-				ctx.fillText("-#{dropping_score}", canvas.width-15, y)
-			if holding_score > 0
+				ctx.fillText("-#{@dropping_score}", canvas.width-15, y)
+			if @holding_score > 0
 				y += 20 + font_size
 				ctx.fillStyle = "rgb(0, 150, 0)"
-				ctx.fillText("+#{holding_score}", canvas.width-15, y)
+				ctx.fillText("+#{@holding_score}", canvas.width-15, y)
+			
+			if @triple_jump_unlocked and @triple_jump_unlocked_animation_time < 80
+				
+				@triple_jump_unlocked_animation_time += 1
+				to = if @triple_jump_unlocked_animation_time > 100 then 0 else 20
+				delta = to - @triple_jump_unlocked_animation
+				@triple_jump_unlocked_animation_velocity += delta / 20
+				@triple_jump_unlocked_animation += @triple_jump_unlocked_animation_velocity
+				
+				font_size = max(30, (canvas.width + canvas.height) / 30)
+				ctx.font = "#{font_size}px sans-serif"
+				ctx.textAlign = "center"
+				ctx.textBaseline = "middle"
+				
+				ctx.save()
+				ctx.translate(canvas.width/2, canvas.height/2)
+				scale = min(1, @triple_jump_unlocked_animation/20)
+				ctx.translate(0, min(1, scale))
+				ctx.globalAlpha = scale
+				ctx.scale(scale, scale)
+				ctx.beginPath()
+				
+				text = "Triple Jump Unlocked!"
+				
+				draw_text = (color, jitter, fill)->
+					# ox = (random() * 2 - 1) * jitter * 2
+					# oy = (random() * 2 - 1) * jitter * 8
+					# ox = sin(Date.now()/500 * jitter) * jitter * 2
+					# oy = cos(Date.now()/500 * jitter) * jitter * 8
+					ox = sin(Date.now()/1000 * jitter) * jitter * 2
+					oy = cos(Date.now()/1000 * jitter) * jitter * 3
+					# ox += (random() * 2 - 1) * jitter / 2
+					# oy += (random() * 2 - 1) * jitter / 3
+					rot_origin_x = (random() * 2 - 1) * 500
+					ctx.translate(rot_origin_x, 0)
+					ctx.rotate((random() * 2 - 1) * 0.01)
+					ctx.translate(-rot_origin_x, 0)
+					if fill
+						ctx.fillStyle = color
+						ctx.fillText(text, ox, oy)
+					else
+						ctx.strokeStyle = color
+						ctx.strokeText(text, ox, oy)
+				
+				ctx.lineWidth = 5
+				ctx.globalCompositeOperation = "multiply"
+				draw_text "rgb(255, 255, 0)", 4.35
+				draw_text "rgb(255, 0, 0)", 3.32
+				draw_text "rgb(0, 255, 255)", 2.57
+				draw_text "rgb(0, 0, 0)", 1.23
+				ctx.globalCompositeOperation = "normal"
+				draw_text "rgb(255, 255, 255)", 0, yes
+				ctx.restore()
 
-game = new Game
+@game = new Game
 game.start()
 game.animate()

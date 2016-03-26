@@ -7,7 +7,10 @@ What kind of game would that be, anyways? Doesn't really make sense.
 
 Part of the [Bad Box Art](http://jams.gamejolt.io/badboxart) game jam.
 
-Controls: Arrow keys or WASD. You can double jump, even after walking off a column. Press R to generate a new level.
+Controls: Arrow keys or WASD.
+You can double jump, even after walking off a column.
+Get enough gems to unlock triple jump!
+Press R to generate a new level.
 
 
 ![Box art depicting some columns, some gems, and a man with his legs out in a ridiculous manour](boxart.jpg)
