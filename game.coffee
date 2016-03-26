@@ -459,7 +459,7 @@ animate ->
 	player.step()
 	player.draw()
 	
-	if player.y + player.h > level_bottom
+	if player.y > level_bottom
 		respawn_player()
 	
 	ctx.restore()
