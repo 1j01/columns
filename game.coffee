@@ -13,7 +13,6 @@ keys = {}
 addEventListener "keydown", (e)->
 	console.log e.keyCode if e.altKey
 	return if e.ctrlKey or e.altKey or e.metaKey
-	console.log e.target.tagName
 	return if e.target.tagName.match /input|button|select|textarea/i
 	keys[e.keyCode] = on
 	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
@@ -519,7 +518,7 @@ class Level
 		while x < 1500
 			SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
 			width = 20
-			if random() < 0.4 and x > last_checkpoint + 400
+			if random() < 0.7 and x > last_checkpoint + 400
 				SomeColumn = CheckpointColumn
 				last_checkpoint = x
 				width = 40
@@ -545,10 +544,18 @@ class Level
 			x += 30 + width + if random() < 0.5 then 10 else 0
 
 		@gems = []
-		for x in [0..1500] by 50
+		for x in [-50..1550] by 48
 			for [0..2]
-				@gems.push new Gem(x + random() * 50, random() * @bottom)
-		
+				loop
+					gem = new Gem(x + random() * 50, random() * @bottom)
+					okay = yes
+					for column in @columns
+						if column.x <= gem.x <= column.x + column.w and column.y <= gem.y <= column.y + column.h
+							okay = no
+					break if okay
+				@gems.push gem
+				break if @gems.length is 100
+			break if @gems.length is 100
 		@effects = []
 	
 	spawn_player: ->
@@ -724,8 +731,10 @@ class Game
 			if @deposited_score > 0
 				if @deposited_score is @maximum_score
 					text = "100% yo"
-				else if @deposited_score > @maximum_score / 2
+				else if @deposited_score >= @triple_jump_unlock_score
 					text = "#{@deposited_score} / #{@maximum_score}"
+				else if @deposited_score >= @triple_jump_unlock_score / 2
+					text = "#{@deposited_score} / #{@triple_jump_unlock_score}"
 				else
 					text = "#{@deposited_score}"
 				ctx.fillText(text, canvas.width-15, y)
