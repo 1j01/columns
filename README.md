@@ -14,3 +14,5 @@ Press R to generate a new level.
 
 
 ![Box art depicting some columns, some gems, and a man with his legs out in a ridiculous manour](boxart.jpg)
+
+Icons are from [IcoMoon](https://icomoon.io/) Free Version, [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/).
