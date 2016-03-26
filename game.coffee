@@ -514,6 +514,7 @@ view_to = {cx: player.x, cy: player.y, scale: 1}
 keys = {}
 addEventListener "keydown", (e)->
 	keys[e.keyCode] = on
+	e.preventDefault() if e.keyCode in [32, 39, 48, 37, 40]
 	console.log e.keyCode if e.altKey
 addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
