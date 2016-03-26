@@ -298,7 +298,7 @@ class Gem
 		@deposited = no
 		@deposited_to = null
 		@deposited_fully = no # for animation
-		@dropped = no # for sound (and maybe score animation)
+		@dropped = no # for sound and score animation
 		# @value = @sides * 100
 		@value = 100
 	
@@ -317,6 +317,7 @@ class Gem
 					unless @collected or @deposited
 						pickup_sound.play()
 						@collected = yes
+						@dropped = no
 			if @collected
 				force = 1.1
 		if force > 0
@@ -373,15 +374,6 @@ class Gem
 		ctx.fill()
 		ctx.fillStyle = gradient
 		ctx.fill()
-		# ctx.rotate(@rotation)
-		# ctx.rotate(2 / @sides * TAU)
-		# ctx.globalCompositeOperation = "soft-light"
-		# ctx.fill()
-		# ctx.globalCompositeOperation = "exclusion"
-		# ctx.globalAlpha = 1 / @sides
-		# for i in [0..@sides]
-		# 	ctx.rotate(1 / @sides * TAU)
-		# 	ctx.fill()
 		ctx.restore()
 
 level_bottom = 500
@@ -474,20 +466,27 @@ animate ->
 	
 	holding_score = 0
 	deposited_score = 0
+	dropping_score = 0
 	for gem in gems
 		if gem.deposited
 			deposited_score += gem.value
+		else if gem.dropped
+			dropping_score += gem.value 
 		else if gem.collected
 			holding_score += gem.value 
 	
-	# font_size = max(20, min(canvas.width, canvas.height) / 30)
-	# font_size = max(20, canvas.width / 30)
 	font_size = max(20, (canvas.width + canvas.height) / 60)
 	ctx.font = "#{font_size}px sans-serif"
 	ctx.textAlign = "right"
 	ctx.textBaseline = "top"
 	ctx.fillStyle = "black"
-	ctx.fillText(deposited_score, canvas.width-15, 15)
+	y = 15
+	ctx.fillText(deposited_score, canvas.width-15, y)
+	if dropping_score > 0
+		y += 20 + font_size
+		ctx.fillStyle = "rgb(150, 0, 0)"
+		ctx.fillText("-#{dropping_score}", canvas.width-15, y)
 	if holding_score > 0
+		y += 20 + font_size
 		ctx.fillStyle = "rgb(0, 150, 0)"
-		ctx.fillText("+#{holding_score}", canvas.width-15, 20 + font_size)
+		ctx.fillText("+#{holding_score}", canvas.width-15, y)
