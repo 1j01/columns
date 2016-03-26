@@ -565,10 +565,13 @@ class Level
 		if @player?
 			@player.x = @player.checkpoint.x
 			@player.y = @player.checkpoint.y
+			@player.vx = 0
+			@player.vy = 0
 		else
 			column = @columns[3]
 			@player = new Player(column.x + 2, column.y)
 			@player.checkpoint = column
+		@player.y = min(@player.y, game.level.bottom)
 		@player.y -= @player.h * 5
 		@player.y -= 1 while @player.collision(@player.x, @player.y)
 	
@@ -719,6 +722,8 @@ class Game
 			if @deposited_score is @maximum_score and not @won
 				@won = yes
 				@level.player.max_jumps = 10
+				for column in @level.columns
+					column.fall_by += random() * 450
 				triple_jump_unlocked_sound.play()
 				@effects.push new TextEffect("You. Win. teh. Game. ah yes")
 			
