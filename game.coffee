@@ -551,7 +551,7 @@ addEventListener "keydown", (e)->
 	console.log e.keyCode if e.altKey
 	return if e.ctrlKey or e.altKey or e.metaKey
 	keys[e.keyCode] = on
-	e.preventDefault() if e.keyCode in [32, 39, 48, 37, 40]
+	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
 	if e.keyCode is 82
 		level = new Level
 		level.spawn_player()
