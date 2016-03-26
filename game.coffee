@@ -128,6 +128,10 @@ class Player
 		@vy = 0
 		@gravity = 0.5
 		@jumps = 0
+		
+		# @arm_angle = 0
+		# @arm_angle_2 = 0
+		# @leg_angle = 0
 	
 	step: ->
 		move = (keys[39]? or keys[68]?) - (keys[37]? or keys[65]?)
@@ -139,11 +143,13 @@ class Player
 		keys_previous = {}
 		keys_previous[k] = v for k, v of keys
 		
-		grounded = @collision(@x, @y + 1)
+		@grounded = @collision(@x, @y + 1)
+		
+		@facing = move unless move is 0
 		
 		@vx += move
 		
-		if grounded
+		if @grounded
 			@jumps = 2
 		if jump
 			if @jumps
@@ -151,8 +157,8 @@ class Player
 				@vy = -9
 				jump_sound.play()
 		
-		if grounded instanceof CheckpointColumn
-			@checkpoint = grounded
+		if @grounded instanceof CheckpointColumn
+			@checkpoint = @grounded
 			for gem in gems when gem.collected and not gem.deposited
 				gem.vy -= 20
 				gem.deposited = yes
@@ -189,35 +195,48 @@ class Player
 		# ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
 		# ctx.fillRect(@x, @y, @w, @h)
 		
+		ctx.save()
+		ctx.translate(@x + @w/2, @y)
+		ctx.scale(-1, 1) if @facing > 0
+		
 		###
 		# LEGS
 		###
 		
 		ctx.save()
-		ctx.translate(@x + @w/2, @y + @h/2 - 4)
-		ctx.fillStyle = "#B0BCC5"
+		ctx.translate(0, @h/2 - 4)
 		
-		leg_angle = if @collision(@x, @y + 1) then 0.2 else 0.8
+		
 		leg_angle =
-			if @collision(@x, @y + 1)
-				0.2 + Math.sin(Date.now() / 800) / 30
+			if @grounded
+				if abs(@vx) > 0.5
+					0.2 + Math.sin(Date.now() / 50) / 5
+				else
+					0.2 + Math.sin(Date.now() / 800) / 30
 			else
-				0.8 + Math.sin(Date.now() / 100) / 10
+				0.7 + Math.sin(Date.now() / 100) / 10
 		
 		if @vy > 2
 			leg_angle /= @vy / 2
 		
+		ctx.fillStyle = "#B0BCC5"
+		
 		ctx.save()
+		# leg
 		ctx.rotate(leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
+		# shoe
+		ctx.fillStyle = "#51576C"
+		ctx.fillRect(-2, @h/2+1, 5, 3)
 		ctx.restore()
 		
 		ctx.save()
+		# leg
 		ctx.rotate(-leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
-		# todo: shoes?
-		# ctx.fillStyle = "#51576C"
-		# ctx.fillRect(-2, @h/2+4, 5, 3)
+		# shoe
+		ctx.fillStyle = "#51576C"
+		ctx.fillRect(-2, @h/2+1, 5, 3)
 		ctx.restore()
 		
 		ctx.restore()
@@ -227,36 +246,43 @@ class Player
 		###
 		
 		ctx.fillStyle = "#EFD57C"
-		ctx.fillRect @x+@w*0.2, @y, @w*0.6, @h/2
+		ctx.fillRect -@w*0.3, 0, @w*0.6, @h/2
 		
 		###
 		# ARMS
 		###
 		
-		derp_angle = 0.8
-		derp_angle_2 = 1.6
-		derp_angle_2 += Math.sin(Date.now() / 100) / 20
+		arm_angle = 0.8
+		arm_angle_2 = 1.6
+		arm_angle_2 += Math.sin(Date.now() / 100) / 20
 		if @vy > 2
-			derp_angle += Math.sin(Date.now() / 155)
-			derp_angle_2 += Math.sin(Date.now() / 94)
+			arm_angle += Math.sin(Date.now() / 155)
+			arm_angle_2 += Math.sin(Date.now() / 94)
 		
 		ctx.save()
-		ctx.translate(@x + @w/2, @y + @h/20 - 4)
+		ctx.translate(0, @h/20 - 4)
 		
 		ctx.save()
-		ctx.rotate(derp_angle)
+		ctx.rotate(arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
-		ctx.rotate(derp_angle_2)
+		ctx.rotate(arm_angle_2)
 		ctx.fillStyle = "#DFAF78"
 		ctx.fillRect(-2, 0, 3, @h/3)
 		ctx.restore()
 		
 		ctx.save()
-		ctx.rotate(-derp_angle)
+		ctx.rotate(-arm_angle)
+		# if @grounded
+		# 	ctx.rotate(arm_angle)
+		# else
+		# 	ctx.rotate(-arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
-		ctx.rotate(-derp_angle_2)
+		if @grounded
+			ctx.rotate(arm_angle_2)
+		else
+			ctx.rotate(-arm_angle_2)
 		ctx.fillStyle = "#DFAF78"
 		ctx.fillRect(-2, 0, 3, @h/3)
 		ctx.restore()
@@ -268,9 +294,15 @@ class Player
 		###
 		
 		ctx.fillStyle = "#DFAF78"
-		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 8
+		ctx.fillRect -@w*0.2, -8, @w*0.4, 8
 		ctx.fillStyle = "#3D3127"
-		ctx.fillRect @x+@w*0.3, @y-8, @w*0.4, 2
+		ctx.fillRect -@w*0.2, -8, @w*0.4, 2
+		
+		###
+		# ze end
+		###
+		
+		ctx.restore()
 
 class Gem
 	gradient = ctx.createLinearGradient(-5, -8, 5, 15)
