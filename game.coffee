@@ -1,4 +1,10 @@
 
+jump_sound = new Howl urls: ["sound/jump.wav"], volume: 0.1
+pickup_sound = new Howl urls: ["sound/pickup.wav"], volume: 0.1
+deposit_sound = new Howl urls: ["sound/deposit.wav"], volume: 0.01
+respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.01
+drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.01
+
 class Column
 	constructor: (@x, @y, @w, @h)->
 		@rim_extension = 5
@@ -143,6 +149,7 @@ class Player
 			if @jumps
 				@jumps -= 1
 				@vy = -9
+				jump_sound.play()
 		
 		if grounded instanceof CheckpointColumn
 			@checkpoint = grounded
@@ -291,6 +298,7 @@ class Gem
 		@deposited = no
 		@deposited_to = null
 		@deposited_fully = no # for animation
+		@dropped = no # for sound (and maybe score animation)
 		# @value = @sides * 100
 		@value = 100
 	
@@ -306,7 +314,9 @@ class Gem
 					force = 2
 				if dist < 10
 					force = 1
-					@collected = yes
+					unless @collected or @deposited
+						pickup_sound.play()
+						@collected = yes
 			if @collected
 				force = 1.1
 		if force > 0
@@ -323,7 +333,9 @@ class Gem
 				force = 3
 				@vx += dx / dist * force
 				@vy += dy / dist * force
-				@deposited_fully = yes if dist < 10
+				unless @deposited_fully
+					deposit_sound.play()
+					@deposited_fully = yes if dist < 10
 		
 		dx = @start_x - @x
 		dy = @start_y - @y
@@ -332,6 +344,9 @@ class Gem
 			force = 1
 			if dist < 5
 				force = 0.5
+				if @dropped
+					@dropped = no
+					drop_sound.play()
 			if dist < 2
 				force = 0.1
 			@vx += dx / dist * force
@@ -405,11 +420,18 @@ for x in [0..1500] by 50
 
 player = null
 do spawn_player = ->
-	gem.collected = no for gem in gems
+	for gem in gems
+		gem.collected = no
+		gem.dropped = yes
 	column = player?.checkpoint ? columns[3]
 	player = new Player(column.x + 2, column.y)
+	player.checkpoint = column
 	player.y -= player.h * 5
 	player.y -= 1 while player.collision(player.x, player.y)
+
+respawn_player = ->
+	spawn_player()
+	respawn_sound.play()
 
 view = {cx: player.x, cy: player.y, scale: 1}
 view_to = {cx: player.x, cy: player.y, scale: 1}
@@ -446,7 +468,7 @@ animate ->
 	player.draw()
 	
 	if player.y + player.h > level_bottom
-		spawn_player()
+		respawn_player()
 	
 	ctx.restore()
 	
