@@ -522,7 +522,7 @@ class Level
 				SomeColumn = CheckpointColumn
 				last_checkpoint = x
 				width = 40
-			height = random() * @bottom/2
+			height = random() * @bottom/2 + 15
 			column = new SomeColumn(x, @bottom-height, width, height)
 			if column instanceof YellowColumn and random() < 0.4
 				column.fall_by = 20 + random() * 50
