@@ -17,10 +17,14 @@ class Column
 		@shaking = no
 		@original_y = @y
 		@fall_by = 0
+		
+		@signal = no
+		@signaliness = 0
 	
 	step: ->
 		shaking_prev = @shaking
 		@shaking = no
+		{player} = level
 		
 		if @resetting
 			if @y > @original_y
@@ -51,39 +55,46 @@ class Column
 			crumble_sound.play()
 	
 	draw: ->
-		if @gradient
-			ctx.save()
-			ctx.translate(@x, @y)
-			
-			ctx.strokeStyle = "black"
-			ctx.lineWidth = 2
-			ctx.fillStyle = @gradient
-			
-			ctx.beginPath()
-			ctx.rect(0, 0, @w, @h)
-			ctx.stroke()
-			ctx.fill()
-			ctx.beginPath()
-			curve_length = 10
-			ctx.moveTo(0, @rim_height + curve_length)
-			ctx.quadraticCurveTo(0, @rim_height, -@rim_extension, @rim_height)
-			ctx.lineTo(-@rim_extension, 0)
-			ctx.lineTo(@w+@rim_extension, 0)
-			ctx.lineTo(@w+@rim_extension, @rim_height)
-			ctx.quadraticCurveTo(@w, @rim_extension, @w, @rim_height + curve_length)
-			ctx.rect(-1, @h-5, @w+2, 5)
-			ctx.stroke()
-			ctx.fill()
-			ctx.beginPath()
-			ctx.fillStyle = @top_gradient
-			ctx.rect(-@rim_extension, 0, @w+@rim_extension*2, 5)
-			ctx.stroke()
-			ctx.fill()
-			
-			ctx.restore()
-		else
-			ctx.fillStyle = "gray"
-			ctx.fillRect(@x, @y, @w, @h)
+		ctx.save()
+		ctx.translate(@x, @y)
+		
+		ctx.strokeStyle = "black"
+		ctx.lineWidth = 2 + @signaliness * 2
+		ctx.fillStyle = @gradient ? "gray"
+		
+		@signaliness *= 0.9
+		@signaliness = 1 if @signal
+		# ctx.globalAlpha = 1 - @signaliness
+		
+		ctx.beginPath()
+		# ctx.rect(0, 0, @w, @h)
+		ctx.stroke()
+		ctx.fill()
+		ctx.beginPath()
+		curve_length = 10
+		ctx.moveTo(0, @h - @rim_height)
+		ctx.lineTo(0, @rim_height + curve_length)
+		ctx.quadraticCurveTo(0, @rim_height, -@rim_extension, @rim_height)
+		ctx.lineTo(-@rim_extension, 0)
+		ctx.lineTo(@w+@rim_extension, 0)
+		ctx.lineTo(@w+@rim_extension, @rim_height)
+		ctx.quadraticCurveTo(@w, @rim_extension, @w, @rim_height + curve_length)
+		ctx.lineTo(@w, @h - @rim_height)
+		ctx.stroke()
+		ctx.fill()
+		ctx.beginPath()
+		ctx.rect(-1, @h-5, @w+2, 5)
+		ctx.stroke()
+		ctx.fill()
+		ctx.beginPath()
+		ctx.fillStyle = @top_gradient ? @gradient
+		ctx.rect(-@rim_extension, 0, @w+@rim_extension*2, 5)
+		ctx.stroke()
+		ctx.fill()
+		
+		ctx.restore()
+		
+		@signal = no
 
 class PinkColumn extends Column
 	colors = ["rgb(119, 84, 83)", "rgb(139, 81, 85)", "rgb(170, 84, 92)", "rgb(199, 90, 104)", "rgb(211, 97, 124)", "rgb(219, 102, 139)", "rgb(211, 102, 138)", "rgb(217, 127, 164)", "rgb(222, 160, 188)", "rgb(231, 186, 206)", "rgb(229, 177, 202)", "rgb(220, 135, 171)", "rgb(205, 98, 133)", "rgb(189, 87, 114)", "rgb(194, 118, 141)", "rgb(235, 202, 214)", "rgb(247, 238, 241)", "rgb(233, 228, 229)", "rgb(232, 213, 221)", "rgb(234, 188, 207)", "rgb(233, 167, 193)", "rgb(223, 128, 164)", "rgb(207, 107, 136)", "rgb(181, 92, 114)", "rgb(211, 115, 149)", "rgb(218, 116, 153)", "rgb(211, 101, 130)", "rgb(199, 91, 107)", "rgb(178, 83, 92)", "rgb(134, 72, 78)", "rgb(118, 71, 73)", "rgb(157, 80, 90)"]
@@ -169,6 +180,9 @@ class Player
 		@gravity = 0.5
 		@jumps = 0
 		
+		@footing = null
+		@previous_footing = null
+		
 		@arm_angle = 0
 		@arm_angle_2 = 0
 		@leg_angle = 0
@@ -198,8 +212,12 @@ class Player
 				jump_sound.play()
 		
 		if @footing instanceof CheckpointColumn
+			# if @checkpoint isnt @footing
+			# if @vy > 0
+			if @footing isnt @previous_footing
+				@footing.signal = yes
 			@checkpoint = @footing
-			for gem in gems when gem.collected and not gem.deposited
+			for gem in level.gems when gem.collected and not gem.deposited
 				gem.vy -= 20
 				gem.deposited = yes
 				gem.deposited_to = @checkpoint
@@ -227,9 +245,11 @@ class Player
 				break
 			my -= y_step
 			@y += y_step
+		
+		@previous_footing = @footing
 	
 	collision: (x, y)->
-		for column in columns
+		for column in level.columns
 			unless x + @w < column.x or column.x + column.w < x or y + @h < column.y or column.y + column.h < y
 				return column
 		return null
@@ -383,6 +403,7 @@ class Gem
 		@value = 100
 	
 	step: ->
+		{player} = level
 		dx = player.x + player.w/2 - @x
 		dy = player.y + player.h/2 - @y
 		dist = sqrt(dx*dx + dy*dy)
@@ -456,60 +477,74 @@ class Gem
 		ctx.fill()
 		ctx.restore()
 
-level_bottom = 500
-columns = []
-last_checkpoint = 0
-x = 0
-while x < 1500
-	SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
-	width = 20
-	if random() < 0.4 and x > last_checkpoint + 400
-		SomeColumn = CheckpointColumn
-		last_checkpoint = x
-		width = 40
-	height = random() * level_bottom/2
-	column = new SomeColumn(x, level_bottom-height, width, height)
-	if column instanceof YellowColumn and random() < 0.4
-		column.fall_by = 20 + random() * 50
-		column.fall_by = 0 if column.fall_by + 5 > column.height
-	columns.push column
-	
-	x += width/4 if width > 20
-	
-	if random() < 0.3
-		SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
-		floater_width = 20
-		floater_height = random() * 20 + 20
-		floater_y = column.y - floater_height - random() * 250 - if column instanceof CheckpointColumn then 60 else 20
-		floating_column = new SomeColumn(x, floater_y, floater_width, floater_height)
-		columns.push floating_column
-	
-	x -= width/4 if width > 20
-	
-	x += 30 + width + if random() < 0.5 then 10 else 0
+class Level
+	constructor: ->
+		@bottom = 500
+		@columns = []
+		last_checkpoint = 0
+		x = 0
+		while x < 1500
+			SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+			width = 20
+			if random() < 0.4 and x > last_checkpoint + 400
+				SomeColumn = CheckpointColumn
+				last_checkpoint = x
+				width = 40
+			height = random() * @bottom/2
+			column = new SomeColumn(x, @bottom-height, width, height)
+			if column instanceof YellowColumn and random() < 0.4
+				column.fall_by = 20 + random() * 50
+				column.fall_by = 0 if column.fall_by + 5 > column.height
+			@columns.push column
+			
+			x += width/4 if width > 20
+			
+			if random() < 0.3
+				SomeColumn = if random() < 0.5 then PinkColumn else YellowColumn
+				floater_width = 20
+				floater_height = random() * 20 + 20
+				floater_y = column.y - floater_height - random() * 250 - if column instanceof CheckpointColumn then 60 else 20
+				floating_column = new SomeColumn(x, floater_y, floater_width, floater_height)
+				@columns.push floating_column
+			
+			x -= width/4 if width > 20
+			
+			x += 30 + width + if random() < 0.5 then 10 else 0
 
-gems = []
-for x in [0..1500] by 50
-	for [0..2]
-		gems.push new Gem(x + random() * 50, random() * level_bottom)
+		@gems = []
+		for x in [0..1500] by 50
+			for [0..2]
+				@gems.push new Gem(x + random() * 50, random() * @bottom)
+	
+	spawn_player: ->
+		for gem in @gems when gem.collected
+			gem.collected = no
+			gem.dropped = yes
+		column = @player?.checkpoint ? @columns[3]
+		@player = new Player(column.x + 2, column.y)
+		@player.checkpoint = column
+		@player.y -= @player.h * 5
+		@player.y -= 1 while @player.collision(@player.x, @player.y)
+	
+	respawn_player: ->
+		@spawn_player()
+		respawn_sound.play()
+	
+	step: ->
+		if @player.y > @bottom
+			@respawn_player()
+		
+		gem.step() for gem in @gems
+		column.step() for column in @columns
+		@player.step()
+	
+	draw: ->
+		gem.draw() for gem in @gems
+		column.draw() for column in @columns
+		@player.draw()
 
-player = null
-do spawn_player = ->
-	for gem in gems when gem.collected
-		gem.collected = no
-		gem.dropped = yes
-	column = player?.checkpoint ? columns[3]
-	player = new Player(column.x + 2, column.y)
-	player.checkpoint = column
-	player.y -= player.h * 5
-	player.y -= 1 while player.collision(player.x, player.y)
-
-respawn_player = ->
-	spawn_player()
-	respawn_sound.play()
-
-view = {cx: player.x, cy: player.y, scale: 1}
-view_to = {cx: player.x, cy: player.y, scale: 1}
+level = new Level
+level.spawn_player()
 
 keys = {}
 addEventListener "keydown", (e)->
@@ -519,44 +554,40 @@ addEventListener "keydown", (e)->
 addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
 
+view = {cx: level.player.x, cy: level.player.y, scale: 1}
+view_to = {cx: level.player.x, cy: level.player.y, scale: 1}
+
 animate ->
 	ctx.fillStyle = "#fff"
 	ctx.fillRect 0, 0, canvas.width, canvas.height
 	
 	ctx.save()
-	view_to.cx = player.x
-	view_to.cy = player.y
+	view_to.cx = level.player.x
+	view_to.cy = level.player.y
 	view_to.scale =
 		if canvas.width > 1500 then 2
 		else if canvas.width > 1000 then 1.5 else 1
 	view.cx += (view_to.cx - view.cx) / 10
 	view.cy += (view_to.cy - view.cy) / 10
 	view.scale += (view_to.scale - view.scale) / 20
-	view.cy = Math.min(view.cy, level_bottom-canvas.height/2/view.scale)
+	view.cy = Math.min(view.cy, level.bottom-canvas.height/2/view.scale)
 	
-	if player.footing?.shaking
+	if level.player.footing?.shaking
 		view.cx += (random() * 2 - 1) * 3
 		view.cy += (random() * 2 - 1) * 5
 	
 	ctx.scale(view.scale, view.scale)
 	ctx.translate(canvas.width/2/view.scale-view.cx, canvas.height/2/view.scale-view.cy)
 	
-	gem.step() for gem in gems
-	gem.draw() for gem in gems
-	column.step() for column in columns
-	column.draw() for column in columns
-	player.step()
-	player.draw()
-	
-	if player.y > level_bottom
-		respawn_player()
+	level.step()
+	level.draw()
 	
 	ctx.restore()
 	
 	holding_score = 0
 	deposited_score = 0
 	dropping_score = 0
-	for gem in gems
+	for gem in level.gems
 		if gem.deposited
 			deposited_score += gem.value
 		else if gem.dropped
