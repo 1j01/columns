@@ -169,6 +169,12 @@ class YellowColumn extends Column
 	
 	gradient: gradient
 	top_gradient: top_gradient
+	
+	constructor: (x, y, w, h)->
+		super
+		if random() < 0.6
+			@fall_by = 20 + ~~(random() * 50)
+			@fall_by = 0 if @y + @fall_by + 5 > game.level.bottom
 
 class CheckpointColumn extends Column
 	
@@ -512,6 +518,8 @@ class Gem
 class Level
 	constructor: ->
 		@bottom = 500
+	
+	generate: ->
 		@columns = []
 		last_checkpoint = 0
 		x = 0
@@ -522,11 +530,8 @@ class Level
 				SomeColumn = CheckpointColumn
 				last_checkpoint = x
 				width = 40
-			height = random() * @bottom/2 + 15
+			height = ~~(random() * @bottom/2 + 15)
 			column = new SomeColumn(x, @bottom-height, width, height)
-			if column instanceof YellowColumn and random() < 0.4
-				column.fall_by = 20 + random() * 50
-				column.fall_by = 0 if column.fall_by + 5 > column.height
 			@columns.push column
 			
 			x += width/4 if width > 20
@@ -567,6 +572,7 @@ class Level
 			@player.y = @player.checkpoint.y
 			@player.vx = 0
 			@player.vy = 0
+			@player.jumps = @player.max_jumps
 		else
 			column = @columns[3]
 			@player = new Player(column.x + 2, column.y)
@@ -660,6 +666,7 @@ class Game
 	
 	start: ->
 		@level = new Level
+		@level.generate()
 		@level.spawn_player()
 		{player} = @level
 		
