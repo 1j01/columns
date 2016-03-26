@@ -2,8 +2,8 @@
 jump_sound = new Howl urls: ["sound/jump.wav"], volume: 0.1
 pickup_sound = new Howl urls: ["sound/pickup.wav"], volume: 0.1
 deposit_sound = new Howl urls: ["sound/deposit.wav"], volume: 0.01
-respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.01
-drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.01
+respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
+drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
 
 class Column
 	constructor: (@x, @y, @w, @h)->
@@ -420,7 +420,7 @@ for x in [0..1500] by 50
 
 player = null
 do spawn_player = ->
-	for gem in gems
+	for gem in gems when gem.collected
 		gem.collected = no
 		gem.dropped = yes
 	column = player?.checkpoint ? columns[3]
