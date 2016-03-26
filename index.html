@@ -18,9 +18,6 @@ for(p=Object.getOwnPropertyNames(Math),i=0;k=p[i];i++){self[k]=Math[k]}TAU=PI*2}
 		<script src="lib/dialog-polyfill.js"></script>
 		<link rel="stylesheet" type="text/css" href="lib/dialog-polyfill.css" />
 		<div id="controls">
-			<!-- <button id="open-restart-dialogue">Restart</button>
-			<button id="toggle-mute" class="mute">Mute</button>
-			<button id="fullscreen">Fullscreen</button> -->
 			<button id="open-restart-dialogue"></button><button id="toggle-mute" class="mute"></button><button id="fullscreen"></button>
 		</div>
 		<style>
@@ -33,21 +30,16 @@ for(p=Object.getOwnPropertyNames(Math),i=0;k=p[i];i++){self[k]=Math[k]}TAU=PI*2}
 				font-size: 1.8em;
 			}
 			#controls button {
+				width: 4em;
+				height: 4em;
 				border: 0;
-				/*width: 16px;
-				height: 16px;*/
-				/*color: transparent;*/
 				margin: 5px;
 				padding: 5px;
 				opacity: 0.7;
-				background-color: transparent;
-				/*background-size: contain;*/
 				background-size: 2em;
 				background-position: center;
 				background-repeat: no-repeat;
-				
-				width: 4em;
-				height: 4em;
+				background-color: transparent;
 			}
 			#controls button:hover {
 				background-color: rgba(0, 0, 0, 0.2);

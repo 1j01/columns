@@ -16,8 +16,13 @@ addEventListener "keydown", (e)->
 	return if e.target.tagName.match /input|button|select|textarea/i
 	keys[e.keyCode] = on
 	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
-	if e.keyCode is 82
-		game.restart()
+	switch e.keyCode
+		when 82 # R
+			restart_button.click()
+		when 77 # M
+			toggle_mute_button.click()
+		when 70 # F
+			fullscreen_button.click()
 
 addEventListener "keyup", (e)->
 	delete keys[e.keyCode]
@@ -790,7 +795,6 @@ toggle_mute_button.onclick = ->
 	else
 		Howler.mute()
 	muted = not muted
-	# toggle_mute_button.innerText = if muted then "Unmute" else "Mute"
 	toggle_mute_button.className = if muted then "unmute" else "mute"
 
 restart_button.onclick = ->
