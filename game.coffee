@@ -583,7 +583,7 @@ class Game
 			
 			ctx.save()
 			@view_to.cx = @level.player.x
-			@view_to.cy = @level.player.y
+			@view_to.cy = @level.player.y + if keys[40] then 150 else 50
 			@view_to.scale =
 				if canvas.width > 1500 then 2
 				else if canvas.width > 1000 then 1.5 else 1
