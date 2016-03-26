@@ -2,7 +2,6 @@
 jump_sound = new Howl urls: ["sound/jump.wav"], volume: 0.1
 pickup_sound = new Howl urls: ["sound/pickup.wav"], volume: 0.1
 deposit_sound = new Howl urls: ["sound/deposit.wav"], volume: 0.01
-# powerup_sound = new Howl urls: ["sound/powerup.wav"], volume: 0.1
 triple_jump_unlocked_sound = new Howl urls: ["sound/triple-jump-unlocked.wav"], volume: 0.1
 respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
 drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
@@ -77,10 +76,8 @@ class Column
 		
 		@signaliness *= 0.9
 		@signaliness = 1 if @signal
-		# ctx.globalAlpha = 1 - @signaliness
 		
 		ctx.beginPath()
-		# ctx.rect(0, 0, @w, @h)
 		ctx.stroke()
 		ctx.fill()
 		ctx.beginPath()
@@ -114,13 +111,13 @@ class PinkColumn extends Column
 	
 	gradient = ctx.createLinearGradient(0.000, 0.000, 120, 25.000)
 	
-	# for color, i in colors
-	# 	gradient.addColorStop i/colors.length, color
-	
-	repeat = 3
 	for color, i in colors
-		for j in [0..repeat]
-			gradient.addColorStop (i / colors.length) / repeat, color
+		gradient.addColorStop i/colors.length/3, color
+	
+	# repeat = 3
+	# for color, i in colors
+	# 	for j in [0..repeat]
+	# 		gradient.addColorStop (i / colors.length) / repeat, color
 	
 	draw: ->
 		ctx.save()
@@ -128,9 +125,7 @@ class PinkColumn extends Column
 		
 		ctx.beginPath()
 		ctx.rect(-@rim_extension, 0, @w+@rim_extension*2, 5) # top
-		# ctx.rect(0, 0, @w, 5) # top
 		ctx.rect(-@rim_extension, @h-5, @w+@rim_extension*2, 5) # bottom
-		# ctx.rect(0, @h-5, @w, 5) # bottom
 		mini_columns = 3
 		for i in [0...mini_columns]
 			ctx.rect(@w/(mini_columns-1)*(i-0.25), 0, @w/mini_columns/2+1, @h)
@@ -143,7 +138,9 @@ class PinkColumn extends Column
 		
 		ctx.restore()
 		
-		# ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
+		# ctx.strokeStyle = "rgba(255, 0, 0, 1)"
+		# ctx.strokeRect(@x, @y, @w, @h)
+		# ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
 		# ctx.fillRect(@x, @y, @w, @h)
 
 class YellowColumn extends Column
@@ -226,8 +223,6 @@ class Player
 				jump_sound.play()
 		
 		if @footing instanceof CheckpointColumn
-			# if @checkpoint isnt @footing
-			# if @vy > 0
 			if @footing isnt @previous_footing
 				@footing.signal = yes
 			@checkpoint = @footing
@@ -269,7 +264,7 @@ class Player
 		return null
 	
 	draw: ->
-		# ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
+		# ctx.fillStyle = "rgba(255, 0, 0, 1)"
 		# ctx.fillRect(@x, @y, @w, @h)
 		
 		ctx.save()
@@ -393,9 +388,7 @@ class Gem
 	gradient.addColorStop(0.25, 'rgba(255, 255, 255, 1.0)')
 	gradient.addColorStop(0.40, 'rgba(255, 255, 255, 0.3)')
 	gradient.addColorStop(0.50, 'rgba(255, 255, 255, 0.5)')
-	# gradient.addColorStop(0.55, 'rgba(255, 255, 255, 0.9)')
 	gradient.addColorStop(0.60, 'rgba(255, 255, 255, 0.3)')
-	# gradient.addColorStop(0.65, 'rgba(255, 255, 255, 0.6)')
 	gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.0)')
 	gradient.addColorStop(1.00, 'rgba(255, 255, 255, 0.3)')
 	
@@ -413,7 +406,6 @@ class Gem
 		@deposited_to = null
 		@deposited_fully = no # for animation
 		@dropped = no # for sound and score animation
-		# @value = @sides * 100
 		@value = 100
 	
 	step: ->
@@ -649,8 +641,7 @@ class Game
 			if @triple_jump_unlocked and @triple_jump_unlocked_animation_time < 80
 				
 				@triple_jump_unlocked_animation_time += 1
-				to = if @triple_jump_unlocked_animation_time > 100 then 0 else 20
-				delta = to - @triple_jump_unlocked_animation
+				delta = 20 - @triple_jump_unlocked_animation
 				@triple_jump_unlocked_animation_velocity += delta / 20
 				@triple_jump_unlocked_animation += @triple_jump_unlocked_animation_velocity
 				
@@ -670,14 +661,8 @@ class Game
 				text = "Triple Jump Unlocked!"
 				
 				draw_text = (color, jitter, fill)->
-					# ox = (random() * 2 - 1) * jitter * 2
-					# oy = (random() * 2 - 1) * jitter * 8
-					# ox = sin(Date.now()/500 * jitter) * jitter * 2
-					# oy = cos(Date.now()/500 * jitter) * jitter * 8
 					ox = sin(Date.now()/1000 * jitter) * jitter * 2
 					oy = cos(Date.now()/1000 * jitter) * jitter * 3
-					# ox += (random() * 2 - 1) * jitter / 2
-					# oy += (random() * 2 - 1) * jitter / 3
 					rot_origin_x = (random() * 2 - 1) * 500
 					ctx.translate(rot_origin_x, 0)
 					ctx.rotate((random() * 2 - 1) * 0.01)
