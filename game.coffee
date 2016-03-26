@@ -6,6 +6,8 @@ triple_jump_unlocked_sound = new Howl urls: ["sound/triple-jump-unlocked.wav"], 
 respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
 drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
 crumble_sound = new Howl urls: ["sound/crumble.wav"], volume: 0.5
+enter_pipe_sound = new Howl urls: ["sound/enter-pipe.wav"], volume: 0.1
+exit_pipe_sound = new Howl urls: ["sound/exit-pipe.wav"], volume: 0.3
 
 keys = {}
 addEventListener "keydown", (e)->
@@ -193,6 +195,7 @@ class Player
 		
 		@footing = null
 		@previous_footing = null
+		@entering_pipe = null
 		
 		@arm_angle = 0
 		@arm_angle_2 = 0
@@ -204,6 +207,7 @@ class Player
 			(keys[38]? and not keys_previous[38]?) or
 			(keys[87]? and not keys_previous[87]?) or
 			(keys[32]? and not keys_previous[32]?)
+		enter = (keys[40]? or keys[83]? or keys[13]?)
 		
 		keys_previous = {}
 		keys_previous[k] = v for k, v of keys
@@ -230,6 +234,21 @@ class Player
 				gem.vy -= 20
 				gem.deposited = yes
 				gem.deposited_to = @checkpoint
+			
+			if enter and not @entering_pipe
+				@entering_pipe = @footing
+				enter_pipe_sound.play()
+				setTimeout =>
+					@y = @entering_pipe.y - @h - 2
+					@vy = -20
+					exit_pipe_sound.play()
+					@entering_pipe = null
+				, 1000 # 500 for imediately after the enter sound finishes
+		
+		if @entering_pipe
+			@y += 2
+			x_to = min(max(@x, @entering_pipe.x), @entering_pipe.x + @entering_pipe.w - @w)
+			@x += (x_to - @x) / 5
 		
 		if @footing?.fall_by
 			@footing.triggered = yes
@@ -333,6 +352,10 @@ class Player
 			arm_angle += Math.sin(Date.now() / 155)
 			arm_angle_2 += Math.sin(Date.now() / 94)
 		
+		if @entering_pipe
+			arm_angle = -3.5
+			arm_angle_2 = 0.5
+		
 		@arm_angle += (arm_angle - @arm_angle) / 3
 		@arm_angle_2 += (arm_angle_2 - @arm_angle_2) / 3
 		
@@ -340,6 +363,7 @@ class Player
 		ctx.translate(0, @h/20 - 4)
 		
 		ctx.save()
+		ctx.translate(-2, 0) if @entering_pipe
 		ctx.rotate(@arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
@@ -349,6 +373,7 @@ class Player
 		ctx.restore()
 		
 		ctx.save()
+		ctx.translate(2, 0) if @entering_pipe
 		ctx.rotate(-@arm_angle)
 		# if @footing
 		# 	ctx.rotate(@arm_angle)
@@ -356,7 +381,7 @@ class Player
 		# 	ctx.rotate(-@arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
-		if @footing
+		if @footing and not @entering_pipe
 			ctx.rotate(@arm_angle_2)
 		else
 			ctx.rotate(-@arm_angle_2)
@@ -541,7 +566,7 @@ class Level
 		respawn_sound.play()
 	
 	step: ->
-		if @player.y > @bottom
+		if @player.y > @bottom and not @player.entering_pipe
 			@respawn_player()
 		
 		gem.step() for gem in @gems
@@ -550,8 +575,9 @@ class Level
 	
 	draw: ->
 		gem.draw() for gem in @gems
+		@player.draw() if @player.entering_pipe
 		column.draw() for column in @columns
-		@player.draw()
+		@player.draw() unless @player.entering_pipe
 
 class Game
 	constructor: ->
