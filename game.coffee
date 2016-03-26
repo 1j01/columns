@@ -129,9 +129,9 @@ class Player
 		@gravity = 0.5
 		@jumps = 0
 		
-		# @arm_angle = 0
-		# @arm_angle_2 = 0
-		# @leg_angle = 0
+		@arm_angle = 0
+		@arm_angle_2 = 0
+		@leg_angle = 0
 	
 	step: ->
 		move = (keys[39]? or keys[68]?) - (keys[37]? or keys[65]?)
@@ -219,11 +219,13 @@ class Player
 		if @vy > 2
 			leg_angle /= @vy / 2
 		
+		@leg_angle += (leg_angle - @leg_angle) / 3
+		
 		ctx.fillStyle = "#B0BCC5"
 		
 		ctx.save()
 		# leg
-		ctx.rotate(leg_angle)
+		ctx.rotate(@leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
 		# shoe
 		ctx.fillStyle = "#51576C"
@@ -232,7 +234,7 @@ class Player
 		
 		ctx.save()
 		# leg
-		ctx.rotate(-leg_angle)
+		ctx.rotate(-@leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
 		# shoe
 		ctx.fillStyle = "#51576C"
@@ -259,30 +261,33 @@ class Player
 			arm_angle += Math.sin(Date.now() / 155)
 			arm_angle_2 += Math.sin(Date.now() / 94)
 		
+		@arm_angle += (arm_angle - @arm_angle) / 3
+		@arm_angle_2 += (arm_angle_2 - @arm_angle_2) / 3
+		
 		ctx.save()
 		ctx.translate(0, @h/20 - 4)
 		
 		ctx.save()
-		ctx.rotate(arm_angle)
+		ctx.rotate(@arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
-		ctx.rotate(arm_angle_2)
+		ctx.rotate(@arm_angle_2)
 		ctx.fillStyle = "#DFAF78"
 		ctx.fillRect(-2, 0, 3, @h/3)
 		ctx.restore()
 		
 		ctx.save()
-		ctx.rotate(-arm_angle)
+		ctx.rotate(-@arm_angle)
 		# if @grounded
-		# 	ctx.rotate(arm_angle)
+		# 	ctx.rotate(@arm_angle)
 		# else
-		# 	ctx.rotate(-arm_angle)
+		# 	ctx.rotate(-@arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
 		if @grounded
-			ctx.rotate(arm_angle_2)
+			ctx.rotate(@arm_angle_2)
 		else
-			ctx.rotate(-arm_angle_2)
+			ctx.rotate(-@arm_angle_2)
 		ctx.fillStyle = "#DFAF78"
 		ctx.fillRect(-2, 0, 3, @h/3)
 		ctx.restore()
