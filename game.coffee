@@ -6,6 +6,17 @@ respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
 drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
 crumble_sound = new Howl urls: ["sound/crumble.wav"], volume: 0.5
 
+keys = {}
+addEventListener "keydown", (e)->
+	console.log e.keyCode if e.altKey
+	return if e.ctrlKey or e.altKey or e.metaKey
+	keys[e.keyCode] = on
+	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
+	if e.keyCode is 82
+		game.restart()
+	
+addEventListener "keyup", (e)->
+	delete keys[e.keyCode]
 
 class Column
 	constructor: (@x, @y, @w, @h)->
@@ -24,7 +35,7 @@ class Column
 	step: ->
 		shaking_prev = @shaking
 		@shaking = no
-		{player} = level
+		{player} = game.level
 		
 		if @resetting
 			if @y > @original_y
@@ -178,7 +189,8 @@ class Player
 		@vx = 0
 		@vy = 0
 		@gravity = 0.5
-		@jumps = 0
+		@max_jumps = 2
+		@jumps = @max_jumps
 		
 		@footing = null
 		@previous_footing = null
@@ -204,7 +216,7 @@ class Player
 		@vx += move
 		
 		if @footing
-			@jumps = 2
+			@jumps = @max_jumps
 		if jump
 			if @jumps
 				@jumps -= 1
@@ -217,7 +229,7 @@ class Player
 			if @footing isnt @previous_footing
 				@footing.signal = yes
 			@checkpoint = @footing
-			for gem in level.gems when gem.collected and not gem.deposited
+			for gem in game.level.gems when gem.collected and not gem.deposited
 				gem.vy -= 20
 				gem.deposited = yes
 				gem.deposited_to = @checkpoint
@@ -249,7 +261,7 @@ class Player
 		@previous_footing = @footing
 	
 	collision: (x, y)->
-		for column in level.columns
+		for column in game.level.columns
 			unless x + @w < column.x or column.x + column.w < x or y + @h < column.y or column.y + column.h < y
 				return column
 		return null
@@ -403,7 +415,7 @@ class Gem
 		@value = 100
 	
 	step: ->
-		{player} = level
+		{player} = game.level
 		dx = player.x + player.w/2 - @x
 		dy = player.y + player.h/2 - @y
 		dist = sqrt(dx*dx + dy*dy)
@@ -543,75 +555,81 @@ class Level
 		column.draw() for column in @columns
 		@player.draw()
 
-level = new Level
-level.spawn_player()
+class Game
+	restart: ->
+		@start()
+	
+	start: ->
+		@level = new Level
+		@level.spawn_player()
+		{player} = @level
+		
+		@view = {cx: player.x, cy: player.y, scale: 1}
+		@view_to = {cx: player.x, cy: player.y, scale: 1}
+		
+		# @triple_jump_unlocked = 0
+		# @triple_jump_unlocked_animation = 0
+	
+	animate: ->
+		animate =>
+			ctx.fillStyle = "#fff"
+			ctx.fillRect 0, 0, canvas.width, canvas.height
+			
+			ctx.save()
+			@view_to.cx = @level.player.x
+			@view_to.cy = @level.player.y
+			@view_to.scale =
+				if canvas.width > 1500 then 2
+				else if canvas.width > 1000 then 1.5 else 1
+			@view.cx += (@view_to.cx - @view.cx) / 10
+			@view.cy += (@view_to.cy - @view.cy) / 10
+			@view.scale += (@view_to.scale - @view.scale) / 20
+			@view.cy = Math.min(@view.cy, @level.bottom-canvas.height/2/@view.scale)
+			
+			if @level.player.footing?.shaking
+				@view.cx += (random() * 2 - 1) * 3
+				@view.cy += (random() * 2 - 1) * 5
+			
+			ctx.scale(@view.scale, @view.scale)
+			ctx.translate(canvas.width/2/@view.scale-@view.cx, canvas.height/2/@view.scale-@view.cy)
+			
+			@level.step()
+			@level.draw()
+			
+			ctx.restore()
+			
+			prev_deposited_score = deposited_score
+			
+			holding_score = 0
+			deposited_score = 0
+			dropping_score = 0
+			for gem in @level.gems
+				if gem.deposited
+					deposited_score += gem.value
+				else if gem.dropped
+					dropping_score += gem.value 
+				else if gem.collected
+					holding_score += gem.value 
+			
+			# if deposited_score > 7000 and prev_deposited_score <= 7000
+			# 	player.max_jumps = 3
+			
+			font_size = max(20, (canvas.width + canvas.height) / 60)
+			ctx.font = "#{font_size}px sans-serif"
+			ctx.textAlign = "right"
+			ctx.textBaseline = "top"
+			ctx.fillStyle = "black"
+			y = 15
+			ctx.fillText(deposited_score, canvas.width-15, y)
+			if dropping_score > 0
+				y += 20 + font_size
+				ctx.fillStyle = "rgb(150, 0, 0)"
+				ctx.fillText("-#{dropping_score}", canvas.width-15, y)
+			if holding_score > 0
+				y += 20 + font_size
+				ctx.fillStyle = "rgb(0, 150, 0)"
+				ctx.fillText("+#{holding_score}", canvas.width-15, y)
 
-keys = {}
-addEventListener "keydown", (e)->
-	console.log e.keyCode if e.altKey
-	return if e.ctrlKey or e.altKey or e.metaKey
-	keys[e.keyCode] = on
-	e.preventDefault() if e.keyCode in [32, 39, 38, 37, 40]
-	if e.keyCode is 82
-		level = new Level
-		level.spawn_player()
-	
-addEventListener "keyup", (e)->
-	delete keys[e.keyCode]
-
-view = {cx: level.player.x, cy: level.player.y, scale: 1}
-view_to = {cx: level.player.x, cy: level.player.y, scale: 1}
-
-animate ->
-	ctx.fillStyle = "#fff"
-	ctx.fillRect 0, 0, canvas.width, canvas.height
-	
-	ctx.save()
-	view_to.cx = level.player.x
-	view_to.cy = level.player.y
-	view_to.scale =
-		if canvas.width > 1500 then 2
-		else if canvas.width > 1000 then 1.5 else 1
-	view.cx += (view_to.cx - view.cx) / 10
-	view.cy += (view_to.cy - view.cy) / 10
-	view.scale += (view_to.scale - view.scale) / 20
-	view.cy = Math.min(view.cy, level.bottom-canvas.height/2/view.scale)
-	
-	if level.player.footing?.shaking
-		view.cx += (random() * 2 - 1) * 3
-		view.cy += (random() * 2 - 1) * 5
-	
-	ctx.scale(view.scale, view.scale)
-	ctx.translate(canvas.width/2/view.scale-view.cx, canvas.height/2/view.scale-view.cy)
-	
-	level.step()
-	level.draw()
-	
-	ctx.restore()
-	
-	holding_score = 0
-	deposited_score = 0
-	dropping_score = 0
-	for gem in level.gems
-		if gem.deposited
-			deposited_score += gem.value
-		else if gem.dropped
-			dropping_score += gem.value 
-		else if gem.collected
-			holding_score += gem.value 
-	
-	font_size = max(20, (canvas.width + canvas.height) / 60)
-	ctx.font = "#{font_size}px sans-serif"
-	ctx.textAlign = "right"
-	ctx.textBaseline = "top"
-	ctx.fillStyle = "black"
-	y = 15
-	ctx.fillText(deposited_score, canvas.width-15, y)
-	if dropping_score > 0
-		y += 20 + font_size
-		ctx.fillStyle = "rgb(150, 0, 0)"
-		ctx.fillText("-#{dropping_score}", canvas.width-15, y)
-	if holding_score > 0
-		y += 20 + font_size
-		ctx.fillStyle = "rgb(0, 150, 0)"
-		ctx.fillText("+#{holding_score}", canvas.width-15, y)
+game = new Game
+game.start()
+game.animate()
