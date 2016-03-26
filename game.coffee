@@ -546,6 +546,8 @@ class Level
 		for x in [0..1500] by 50
 			for [0..2]
 				@gems.push new Gem(x + random() * 50, random() * @bottom)
+		
+		@effects = []
 	
 	spawn_player: ->
 		for gem in @gems when gem.collected
@@ -578,12 +580,68 @@ class Level
 		@player.draw() if @player.entering_pipe
 		column.draw() for column in @columns
 		@player.draw() unless @player.entering_pipe
+		effect.draw() for effect in @effects
+
+class TextEffect
+	constructor: (@text, @repeat = Infinity)->
+		@triple_jump_unlocked = 0
+		@animation = 0
+		@animation_velocity = 0
+		@animation_time = 0
+	
+	draw: ->
+		return if @animation_time > 26 * @repeat
+		
+		@animation_time += 1
+		delta = 20 - @animation
+		@animation_velocity += delta / 20
+		@animation += @animation_velocity
+		
+		font_size = max(30, (canvas.width + canvas.height) / 30)
+		ctx.font = "#{font_size}px sans-serif"
+		ctx.textAlign = "center"
+		ctx.textBaseline = "middle"
+		
+		ctx.save()
+		ctx.translate(canvas.width/2, canvas.height/2)
+		scale = min(1, @animation/20)
+		ctx.translate(0, min(1, scale))
+		ctx.globalAlpha = scale
+		ctx.scale(scale, scale)
+		ctx.beginPath()
+		
+		draw_text = (color, jitter, fill)=>
+			ox = sin(Date.now()/1000 * jitter) * jitter * 2
+			oy = cos(Date.now()/1000 * jitter) * jitter * 3
+			rot_origin_x = (random() * 2 - 1) * 500
+			ctx.translate(rot_origin_x, 0)
+			ctx.rotate((random() * 2 - 1) * 0.01)
+			ctx.translate(-rot_origin_x, 0)
+			if fill
+				ctx.fillStyle = color
+				ctx.fillText(@text, ox, oy)
+			else
+				ctx.strokeStyle = color
+				ctx.strokeText(@text, ox, oy)
+		
+		ctx.lineWidth = 5
+		ctx.globalCompositeOperation = "multiply"
+		draw_text "rgb(255, 255, 0)", 4.35
+		draw_text "rgb(255, 0, 0)", 3.32
+		draw_text "rgb(0, 255, 255)", 2.57
+		draw_text "rgb(0, 0, 0)", 1.23
+		ctx.globalCompositeOperation = "normal"
+		draw_text "rgb(255, 255, 255)", 0, yes
+		ctx.restore()
 
 class Game
 	constructor: ->
 		@holding_score = 0
 		@deposited_score = 0
 		@dropping_score = 0
+		@maximum_score = 0
+		
+		@effects = []
 	
 	restart: ->
 		@start()
@@ -598,9 +656,7 @@ class Game
 		
 		@triple_jump_unlock_score = 7000
 		@triple_jump_unlocked = 0
-		@triple_jump_unlocked_animation = 0
-		@triple_jump_unlocked_animation_velocity = 0
-		@triple_jump_unlocked_animation_time = 0
+		@won = no
 	
 	animate: ->
 		animate =>
@@ -630,12 +686,14 @@ class Game
 			
 			ctx.restore()
 			
-			prev_deposited_score = @deposited_score
+			effect.draw() for effect in @effects
 			
 			@holding_score = 0
 			@deposited_score = 0
 			@dropping_score = 0
+			@maximum_score = 0
 			for gem in @level.gems
+				@maximum_score += gem.value
 				if gem.deposited
 					@deposited_score += gem.value
 				else if gem.dropped
@@ -643,10 +701,17 @@ class Game
 				else if gem.collected
 					@holding_score += gem.value 
 			
-			if @deposited_score >= @triple_jump_unlock_score and prev_deposited_score < @triple_jump_unlock_score
-				@level.player.max_jumps = 3
+			if @deposited_score >= @triple_jump_unlock_score and not @triple_jump_unlocked
 				@triple_jump_unlocked = yes
+				@level.player.max_jumps = 3
 				triple_jump_unlocked_sound.play()
+				@effects.push new TextEffect("Triple Jump Unlocked!", 3)
+			
+			if @deposited_score is @maximum_score and not @won
+				@won = yes
+				@level.player.max_jumps = 10
+				triple_jump_unlocked_sound.play()
+				@effects.push new TextEffect("You. Win. teh. Game. ah yes")
 			
 			font_size = max(20, (canvas.width + canvas.height) / 60)
 			ctx.font = "#{font_size}px sans-serif"
@@ -654,61 +719,23 @@ class Game
 			ctx.textBaseline = "top"
 			ctx.fillStyle = "black"
 			y = 15
-			ctx.fillText(@deposited_score, canvas.width-15, y)
-			if @dropping_score > 0
+			if @deposited_score > 0
+				if @deposited_score is @maximum_score
+					text = "100% yo"
+				else if @deposited_score > @maximum_score / 2
+					text = "#{@deposited_score} / #{@maximum_score}"
+				else
+					text = "#{@deposited_score}"
+				ctx.fillText(text, canvas.width-15, y)
 				y += 20 + font_size
+			if @dropping_score > 0
 				ctx.fillStyle = "rgb(150, 0, 0)"
 				ctx.fillText("-#{@dropping_score}", canvas.width-15, y)
-			if @holding_score > 0
 				y += 20 + font_size
+			if @holding_score > 0
 				ctx.fillStyle = "rgb(0, 150, 0)"
 				ctx.fillText("+#{@holding_score}", canvas.width-15, y)
-			
-			if @triple_jump_unlocked and @triple_jump_unlocked_animation_time < 80
-				
-				@triple_jump_unlocked_animation_time += 1
-				delta = 20 - @triple_jump_unlocked_animation
-				@triple_jump_unlocked_animation_velocity += delta / 20
-				@triple_jump_unlocked_animation += @triple_jump_unlocked_animation_velocity
-				
-				font_size = max(30, (canvas.width + canvas.height) / 30)
-				ctx.font = "#{font_size}px sans-serif"
-				ctx.textAlign = "center"
-				ctx.textBaseline = "middle"
-				
-				ctx.save()
-				ctx.translate(canvas.width/2, canvas.height/2)
-				scale = min(1, @triple_jump_unlocked_animation/20)
-				ctx.translate(0, min(1, scale))
-				ctx.globalAlpha = scale
-				ctx.scale(scale, scale)
-				ctx.beginPath()
-				
-				text = "Triple Jump Unlocked!"
-				
-				draw_text = (color, jitter, fill)->
-					ox = sin(Date.now()/1000 * jitter) * jitter * 2
-					oy = cos(Date.now()/1000 * jitter) * jitter * 3
-					rot_origin_x = (random() * 2 - 1) * 500
-					ctx.translate(rot_origin_x, 0)
-					ctx.rotate((random() * 2 - 1) * 0.01)
-					ctx.translate(-rot_origin_x, 0)
-					if fill
-						ctx.fillStyle = color
-						ctx.fillText(text, ox, oy)
-					else
-						ctx.strokeStyle = color
-						ctx.strokeText(text, ox, oy)
-				
-				ctx.lineWidth = 5
-				ctx.globalCompositeOperation = "multiply"
-				draw_text "rgb(255, 255, 0)", 4.35
-				draw_text "rgb(255, 0, 0)", 3.32
-				draw_text "rgb(0, 255, 255)", 2.57
-				draw_text "rgb(0, 0, 0)", 1.23
-				ctx.globalCompositeOperation = "normal"
-				draw_text "rgb(255, 255, 255)", 0, yes
-				ctx.restore()
+				y += 20 + font_size
 
 @game = new Game
 game.start()
