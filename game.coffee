@@ -4,12 +4,52 @@ pickup_sound = new Howl urls: ["sound/pickup.wav"], volume: 0.1
 deposit_sound = new Howl urls: ["sound/deposit.wav"], volume: 0.01
 respawn_sound = new Howl urls: ["sound/respawn.wav"], volume: 0.1
 drop_sound = new Howl urls: ["sound/drop.wav"], volume: 0.05
+crumble_sound = new Howl urls: ["sound/crumble.wav"], volume: 0.5
+
 
 class Column
 	constructor: (@x, @y, @w, @h)->
 		@rim_extension = 5
 		@rim_height = 5
 		
+		@triggered = no
+		@resetting = no
+		@shaking = no
+		@original_y = @y
+		@fall_by = 0
+	
+	step: ->
+		shaking_prev = @shaking
+		@shaking = no
+		
+		if @resetting
+			if @y > @original_y
+				@y -= 1
+				@shaking = yes
+				if player.collision(player.x, player.y)
+					player.y -= 1
+				if player.collision(player.x, player.y)
+					@y += 1
+					@shaking = no
+			else
+				unless player.collision(player.x, player.y+1) is @
+					@resetting = no
+					@triggered = no
+		else if @triggered
+			if @y < @original_y + @fall_by
+				if player.collision(player.x, player.y + 1) is @
+					player.y += 1
+				@y += 1
+				@shaking = yes
+			else
+				@triggered = no
+				setTimeout =>
+					@resetting = yes
+				, 2000
+		
+		if @shaking and not shaking_prev
+			crumble_sound.play()
+	
 	draw: ->
 		if @gradient
 			ctx.save()
@@ -143,13 +183,13 @@ class Player
 		keys_previous = {}
 		keys_previous[k] = v for k, v of keys
 		
-		@grounded = @collision(@x, @y + 1)
+		@footing = @collision(@x, @y + 1)
 		
 		@facing = move unless move is 0
 		
 		@vx += move
 		
-		if @grounded
+		if @footing
 			@jumps = 2
 		if jump
 			if @jumps
@@ -157,12 +197,15 @@ class Player
 				@vy = -9
 				jump_sound.play()
 		
-		if @grounded instanceof CheckpointColumn
-			@checkpoint = @grounded
+		if @footing instanceof CheckpointColumn
+			@checkpoint = @footing
 			for gem in gems when gem.collected and not gem.deposited
 				gem.vy -= 20
 				gem.deposited = yes
 				gem.deposited_to = @checkpoint
+		
+		if @footing?.fall_by
+			@footing.triggered = yes
 		
 		@vx *= 0.8
 		@vy += @gravity
@@ -208,7 +251,7 @@ class Player
 		
 		
 		leg_angle =
-			if @grounded
+			if @footing
 				if abs(@vx) > 0.5
 					0.2 + Math.sin(Date.now() / 50) / 5
 				else
@@ -278,13 +321,13 @@ class Player
 		
 		ctx.save()
 		ctx.rotate(-@arm_angle)
-		# if @grounded
+		# if @footing
 		# 	ctx.rotate(@arm_angle)
 		# else
 		# 	ctx.rotate(-@arm_angle)
 		ctx.fillRect(-2, 0, 4, @h/3)
 		ctx.translate(0, @h/3)
-		if @grounded
+		if @footing
 			ctx.rotate(@arm_angle_2)
 		else
 			ctx.rotate(-@arm_angle_2)
@@ -426,6 +469,9 @@ while x < 1500
 		width = 40
 	height = random() * level_bottom/2
 	column = new SomeColumn(x, level_bottom-height, width, height)
+	if column instanceof YellowColumn and random() < 0.4
+		column.fall_by = 20 + random() * 50
+		column.fall_by = 0 if column.fall_by + 5 > column.height
 	columns.push column
 	
 	x += width/4 if width > 20
@@ -486,13 +532,18 @@ animate ->
 	view.cy += (view_to.cy - view.cy) / 10
 	view.scale += (view_to.scale - view.scale) / 20
 	view.cy = Math.min(view.cy, level_bottom-canvas.height/2/view.scale)
+	
+	if player.footing?.shaking
+		view.cx += (random() * 2 - 1) * 3
+		view.cy += (random() * 2 - 1) * 5
+	
 	ctx.scale(view.scale, view.scale)
 	ctx.translate(canvas.width/2/view.scale-view.cx, canvas.height/2/view.scale-view.cy)
 	
 	gem.step() for gem in gems
 	gem.draw() for gem in gems
+	column.step() for column in columns
 	column.draw() for column in columns
-	
 	player.step()
 	player.draw()
 	
