@@ -635,7 +635,8 @@ class TextEffect
 		return if @animation_time > 26 * @repeat
 		
 		@animation_time += 1
-		delta = 20 - @animation
+		to = 20 + (if @repeat is Infinity then @animation_time else 0)
+		delta = to - @animation
 		@animation_velocity += delta / 20
 		@animation += @animation_velocity
 		
@@ -682,8 +683,6 @@ class Game
 		@deposited_score = 0
 		@dropping_score = 0
 		@maximum_score = 0
-		
-		@effects = []
 	
 	restart: ->
 		@start()
@@ -693,6 +692,8 @@ class Game
 		@level.generate()
 		@level.spawn_player()
 		{player} = @level
+		
+		@effects = []
 		
 		@view = {cx: player.x, cy: player.y, scale: 1}
 		@view_to = {cx: player.x, cy: player.y, scale: 1}
