@@ -332,16 +332,17 @@ class Player
 		ctx.fillRect(-2, 0, 4, @h/2+4)
 		# shoe
 		ctx.fillStyle = "#51576C"
-		ctx.fillRect(-2, @h/2+1, 5, 3)
+		ctx.fillRect(-3, @h/2+1, 5, 3)
 		ctx.restore()
 		
 		ctx.save()
+		ctx.scale(-1, 1)
 		# leg
-		ctx.rotate(-@leg_angle)
+		ctx.rotate(@leg_angle)
 		ctx.fillRect(-2, 0, 4, @h/2+4)
 		# shoe
 		ctx.fillStyle = "#51576C"
-		ctx.fillRect(-2, @h/2+1, 5, 3)
+		ctx.fillRect(-3, @h/2+1, 5, 3)
 		ctx.restore()
 		
 		ctx.restore()
