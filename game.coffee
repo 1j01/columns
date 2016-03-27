@@ -117,15 +117,10 @@ class Column
 class PinkColumn extends Column
 	colors = ["rgb(119, 84, 83)", "rgb(139, 81, 85)", "rgb(170, 84, 92)", "rgb(199, 90, 104)", "rgb(211, 97, 124)", "rgb(219, 102, 139)", "rgb(211, 102, 138)", "rgb(217, 127, 164)", "rgb(222, 160, 188)", "rgb(231, 186, 206)", "rgb(229, 177, 202)", "rgb(220, 135, 171)", "rgb(205, 98, 133)", "rgb(189, 87, 114)", "rgb(194, 118, 141)", "rgb(235, 202, 214)", "rgb(247, 238, 241)", "rgb(233, 228, 229)", "rgb(232, 213, 221)", "rgb(234, 188, 207)", "rgb(233, 167, 193)", "rgb(223, 128, 164)", "rgb(207, 107, 136)", "rgb(181, 92, 114)", "rgb(211, 115, 149)", "rgb(218, 116, 153)", "rgb(211, 101, 130)", "rgb(199, 91, 107)", "rgb(178, 83, 92)", "rgb(134, 72, 78)", "rgb(118, 71, 73)", "rgb(157, 80, 90)"]
 	
-	gradient = ctx.createLinearGradient(0.000, 0.000, 120, 25.000)
+	gradient = ctx.createLinearGradient(0, 0, 120/3, 25/3)
 	
 	for color, i in colors
-		gradient.addColorStop i/colors.length/3, color
-	
-	# repeat = 3
-	# for color, i in colors
-	# 	for j in [0..repeat]
-	# 		gradient.addColorStop (i / colors.length) / repeat, color
+		gradient.addColorStop i/colors.length, color
 	
 	draw: ->
 		ctx.save()
@@ -145,11 +140,6 @@ class PinkColumn extends Column
 		ctx.fill()
 		
 		ctx.restore()
-		
-		# ctx.strokeStyle = "rgba(255, 0, 0, 1)"
-		# ctx.strokeRect(@x, @y, @w, @h)
-		# ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
-		# ctx.fillRect(@x, @y, @w, @h)
 
 class YellowColumn extends Column
 	gradient = ctx.createLinearGradient(0.000, 150.000, 20, 150.000)
@@ -295,9 +285,6 @@ class Player
 		return null
 	
 	draw: ->
-		# ctx.fillStyle = "rgba(255, 0, 0, 1)"
-		# ctx.fillRect(@x, @y, @w, @h)
-		
 		ctx.save()
 		ctx.translate(@x + @w/2, @y)
 		ctx.scale(-1, 1) if @facing > 0
@@ -374,12 +361,6 @@ class Player
 		@arm_angle += (arm_angle - @arm_angle) / 3
 		@arm_angle_2 += (arm_angle_2 - @arm_angle_2) / 3
 		
-		# if @footing and abs(@vx) > 0.5
-		# 	@arm_angle += 0.2 + Math.sin(Date.now() / 50) / 5
-		# 	0.2 + Math.sin(Date.now() / 50) / 5
-		# else
-		# 	0.2 + Math.sin(Date.now() / 800) / 30
-		
 		ctx.save()
 		ctx.translate(0, @h/20 - 4)
 		
@@ -387,13 +368,6 @@ class Player
 			ctx.save()
 			ctx.scale(-1, 1) if right
 			ctx.translate(-2, 0) if @entering_pipe
-			# if right
-			# 	if @footing and not @entering_pipe
-			# 		ctx.rotate(-@arm_angle)
-			# 	else
-			# 		ctx.rotate(@arm_angle)
-			# else
-			# 	ctx.rotate(@arm_angle)
 			if @footing and not @entering_pipe
 				if right
 					ctx.rotate(TAU/4-@arm_angle)
@@ -422,23 +396,10 @@ class Player
 			ctx.lineWidth = 3
 			ctx.strokeStyle = "#DFAF78"
 			ctx.stroke()
-			# ctx.fillRect(-2, 0, 3, @h/3)
 			ctx.restore()
 		
 		draw_arm no
 		draw_arm yes
-		# ctx.save()
-		# ctx.translate(2, 0) if @entering_pipe
-		# ctx.rotate(-@arm_angle)
-		# # if @footing
-		# # 	ctx.rotate(@arm_angle)
-		# # else
-		# # 	ctx.rotate(-@arm_angle)
-		# ctx.fillRect(-2, 0, 4, @h/3)
-		# ctx.translate(0, @h/3)
-		# ctx.fillStyle = "#DFAF78"
-		# ctx.fillRect(-2, 0, 3, @h/3)
-		# ctx.restore()
 		
 		ctx.restore()
 		
@@ -454,7 +415,6 @@ class Player
 		# hair
 		ctx.beginPath()
 		ctx.strokeStyle = "#3D3127"
-		# ctx.fillRect -@w*0.2, -8, @w*0.4, 2
 		ctx.moveTo -@w*0.1, -7
 		ctx.lineTo -@w*0.12, -6
 		ctx.moveTo -@w*0.1, -7.5
@@ -466,9 +426,6 @@ class Player
 		ctx.lineTo @w*0.14, -5.5
 		ctx.lineWidth = 2
 		ctx.stroke()
-		# ctx.fillRect @w*0.1, -8, @w*0.1, 3
-		# ctx.fillRect @w*0.0, -8, @w*0.2, 2
-		# ctx.fillRect -@w*0.2, -7, @w*0.05, 2
 		
 		###
 		# ze end
