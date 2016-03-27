@@ -410,14 +410,28 @@ class Player
 		
 		ctx.fillStyle = "#DFAF78"
 		ctx.beginPath()
-		ctx.arc 0, -5, @w*0.2, 0, TAU, no
-		ctx.rect -@w*0.15, -3, @w*0.3, 2
+		ctx.arc 0, -5, @w*0.2, 0, TAU, no # head
+		ctx.rect -@w*0.15, -3, @w*0.3, 2 # neck
 		ctx.fill()
-		ctx.fillStyle = "#3D3127"
+		# hair
+		ctx.beginPath()
+		ctx.strokeStyle = "#3D3127"
+		ctx.lineCap = "round"
 		# ctx.fillRect -@w*0.2, -8, @w*0.4, 2
-		ctx.fillRect @w*0.1, -8, @w*0.1, 3
-		ctx.fillRect @w*0.0, -8, @w*0.2, 2
-		ctx.fillRect -@w*0.2, -7, @w*0.05, 2
+		ctx.moveTo -@w*0.1, -7
+		ctx.lineTo -@w*0.12, -6
+		ctx.moveTo -@w*0.1, -7.5
+		ctx.lineTo @w*0.12, -7
+		ctx.lineWidth = 1
+		ctx.stroke()
+		ctx.beginPath()
+		ctx.moveTo @w*0.13, -6.5
+		ctx.lineTo @w*0.14, -5.5
+		ctx.lineWidth = 2
+		ctx.stroke()
+		# ctx.fillRect @w*0.1, -8, @w*0.1, 3
+		# ctx.fillRect @w*0.0, -8, @w*0.2, 2
+		# ctx.fillRect -@w*0.2, -7, @w*0.05, 2
 		
 		###
 		# ze end
