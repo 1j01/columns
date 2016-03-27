@@ -240,12 +240,22 @@ class Player
 			if enter and not @entering_pipe
 				@entering_pipe = @footing
 				enter_pipe_sound.play()
+				delay = 500 # imediately after the enter sound finishes
+				delay += 500
+				unless game.entered_pipe
+					game.entered_pipe = yes
+					game.effects.push new TextEffect("Ceci n'est pas une pipe", 2)
+					delay += 500
+					setTimeout =>
+						game.effects.push new TextEffect("Ceci est soit une colonne ou un canon", 1)
+					, delay
+					delay += 500
 				setTimeout =>
 					@y = @entering_pipe.y - @h - 2
 					@vy = -20
 					exit_pipe_sound.play()
 					@entering_pipe = null
-				, 1000 # 500 for imediately after the enter sound finishes
+				, delay
 		
 		if @entering_pipe
 			@y += 2
@@ -690,6 +700,7 @@ class Game
 		@triple_jump_unlock_score = 7000
 		@triple_jump_unlocked = 0
 		@won = no
+		@entered_pipe = no
 	
 	animate: ->
 		animate =>
