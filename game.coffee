@@ -352,11 +352,13 @@ class Player
 		###
 		
 		ctx.fillStyle = "#EFD57C"
-		ctx.fillRect -@w*0.3, 0, @w*0.6, @h/2
+		ctx.fillRect -@w*0.3, -1, @w*0.6, @h/2+1
 		
 		###
 		# ARMS
 		###
+		
+		ctx.lineCap = "round"
 		
 		arm_angle = 0.8
 		arm_angle_2 = 1.6
@@ -372,35 +374,71 @@ class Player
 		@arm_angle += (arm_angle - @arm_angle) / 3
 		@arm_angle_2 += (arm_angle_2 - @arm_angle_2) / 3
 		
+		# if @footing and abs(@vx) > 0.5
+		# 	@arm_angle += 0.2 + Math.sin(Date.now() / 50) / 5
+		# 	0.2 + Math.sin(Date.now() / 50) / 5
+		# else
+		# 	0.2 + Math.sin(Date.now() / 800) / 30
+		
 		ctx.save()
 		ctx.translate(0, @h/20 - 4)
 		
-		ctx.save()
-		ctx.translate(-2, 0) if @entering_pipe
-		ctx.rotate(@arm_angle)
-		ctx.fillRect(-2, 0, 4, @h/3)
-		ctx.translate(0, @h/3)
-		ctx.rotate(@arm_angle_2)
-		ctx.fillStyle = "#DFAF78"
-		ctx.fillRect(-2, 0, 3, @h/3)
-		ctx.restore()
+		draw_arm = (right)=>
+			ctx.save()
+			ctx.scale(-1, 1) if right
+			ctx.translate(-2, 0) if @entering_pipe
+			# if right
+			# 	if @footing and not @entering_pipe
+			# 		ctx.rotate(-@arm_angle)
+			# 	else
+			# 		ctx.rotate(@arm_angle)
+			# else
+			# 	ctx.rotate(@arm_angle)
+			if @footing and not @entering_pipe
+				if right
+					ctx.rotate(TAU/4-@arm_angle)
+				else
+					ctx.rotate(@arm_angle)
+				if @footing and abs(@vx) > 0.5
+					ctx.rotate(2 * Math.sin(Date.now() / 50) / 5)
+			else if @entering_pipe
+				ctx.rotate(@arm_angle)
+			else
+				ctx.rotate(-@arm_angle)
+			ctx.beginPath()
+			ctx.moveTo(0, 0)
+			ctx.lineTo(0, @h/3)
+			ctx.lineWidth = 4
+			ctx.strokeStyle = "#EFD57C"
+			ctx.stroke()
+			ctx.translate(0, @h/3)
+			if right and abs(@vx) > 0.5 or not @footing
+				ctx.rotate(-@arm_angle_2)
+			else
+				ctx.rotate(@arm_angle_2)
+			ctx.beginPath()
+			ctx.moveTo(0, 0)
+			ctx.lineTo(0, @h/4)
+			ctx.lineWidth = 3
+			ctx.strokeStyle = "#DFAF78"
+			ctx.stroke()
+			# ctx.fillRect(-2, 0, 3, @h/3)
+			ctx.restore()
 		
-		ctx.save()
-		ctx.translate(2, 0) if @entering_pipe
-		ctx.rotate(-@arm_angle)
-		# if @footing
-		# 	ctx.rotate(@arm_angle)
-		# else
-		# 	ctx.rotate(-@arm_angle)
-		ctx.fillRect(-2, 0, 4, @h/3)
-		ctx.translate(0, @h/3)
-		if @footing and not @entering_pipe
-			ctx.rotate(@arm_angle_2)
-		else
-			ctx.rotate(-@arm_angle_2)
-		ctx.fillStyle = "#DFAF78"
-		ctx.fillRect(-2, 0, 3, @h/3)
-		ctx.restore()
+		draw_arm no
+		draw_arm yes
+		# ctx.save()
+		# ctx.translate(2, 0) if @entering_pipe
+		# ctx.rotate(-@arm_angle)
+		# # if @footing
+		# # 	ctx.rotate(@arm_angle)
+		# # else
+		# # 	ctx.rotate(-@arm_angle)
+		# ctx.fillRect(-2, 0, 4, @h/3)
+		# ctx.translate(0, @h/3)
+		# ctx.fillStyle = "#DFAF78"
+		# ctx.fillRect(-2, 0, 3, @h/3)
+		# ctx.restore()
 		
 		ctx.restore()
 		
@@ -416,7 +454,6 @@ class Player
 		# hair
 		ctx.beginPath()
 		ctx.strokeStyle = "#3D3127"
-		ctx.lineCap = "round"
 		# ctx.fillRect -@w*0.2, -8, @w*0.4, 2
 		ctx.moveTo -@w*0.1, -7
 		ctx.lineTo -@w*0.12, -6
