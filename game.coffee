@@ -317,10 +317,10 @@ class Player
 			ctx.scale(-1, 1) if right
 			# leg
 			ctx.rotate(@leg_angle)
-			ctx.fillRect(-2, 0, 4, @h/2+4)
+			ctx.fillRect(-3, 0, 4, @h/2+4)
 			# shoe
 			ctx.fillStyle = "#51576C"
-			ctx.fillRect(-3, @h/2+1, 5, 3)
+			ctx.fillRect(-4, @h/2+1, 5, 3)
 			ctx.restore()
 		
 		draw_leg yes
