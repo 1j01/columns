@@ -296,7 +296,6 @@ class Player
 		ctx.save()
 		ctx.translate(0, @h/2 - 4)
 		
-		
 		leg_angle =
 			if @footing
 				if abs(@vx) > 0.5
@@ -313,24 +312,19 @@ class Player
 		
 		ctx.fillStyle = "#B0BCC5"
 		
-		ctx.save()
-		# leg
-		ctx.rotate(@leg_angle)
-		ctx.fillRect(-2, 0, 4, @h/2+4)
-		# shoe
-		ctx.fillStyle = "#51576C"
-		ctx.fillRect(-3, @h/2+1, 5, 3)
-		ctx.restore()
+		draw_leg = (right)=>
+			ctx.save()
+			ctx.scale(-1, 1) if right
+			# leg
+			ctx.rotate(@leg_angle)
+			ctx.fillRect(-2, 0, 4, @h/2+4)
+			# shoe
+			ctx.fillStyle = "#51576C"
+			ctx.fillRect(-3, @h/2+1, 5, 3)
+			ctx.restore()
 		
-		ctx.save()
-		ctx.scale(-1, 1)
-		# leg
-		ctx.rotate(@leg_angle)
-		ctx.fillRect(-2, 0, 4, @h/2+4)
-		# shoe
-		ctx.fillStyle = "#51576C"
-		ctx.fillRect(-3, @h/2+1, 5, 3)
-		ctx.restore()
+		draw_leg yes
+		draw_leg no
 		
 		ctx.restore()
 		
